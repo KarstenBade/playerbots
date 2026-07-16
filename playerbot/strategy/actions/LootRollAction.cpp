@@ -244,7 +244,11 @@ bool RollAction::RollOnItemInSlot(RollVote vote, ObjectGuid lootGuid, uint32 slo
         return false;
 
     LootItem* item = loot->GetLootItemInSlot(slot);
+#ifdef VMANGOS
+    ItemPrototype const* proto = sItemStorage.LookupEntry<ItemPrototype>(item->itemid);
+#else
     ItemPrototype const* proto = sItemStorage.LookupEntry<ItemPrototype>(item->itemId);
+#endif
     if (!proto)
         return false;
 
