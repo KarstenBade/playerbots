@@ -123,6 +123,14 @@ if (BUILD_PLAYERBOTS)
   add_definitions(-DENABLE_PLAYERBOTS)
 endif()
 
+# >>> VMANGOS: vmangos hosts this module via src/modules/CMakeLists.txt, which
+# sets VMANGOS. Its CMake project is named "MaNGOS", so the project-name
+# detection below would pick the wrong core. vmangos follows the CMANGOS code
+# paths (with VMANGOS overrides where the APIs differ) and is vanilla-only.
+if (VMANGOS)
+  add_definitions(-DCMANGOS -DVMANGOS -DMANGOSBOT_ZERO)
+else()
+# <<< VMANGOS
 # Define Core
 if ( ${CMAKE_PROJECT_NAME} MATCHES "CMaNGOS")
   add_definitions(-DCMANGOS)
@@ -142,6 +150,7 @@ endif()
 if ( ${CMAKE_PROJECT_NAME} MATCHES "WoTLK")
   add_definitions(-DMANGOSBOT_TWO)
 endif()
+endif() # >>> VMANGOS <<<
 
 # Define ENABLE_MODULES if need
 if (BUILD_MODULES)
@@ -176,9 +185,11 @@ target_include_directories(${LIBRARY_NAME}
 )
 
 # Install config files
-if ( ${CMAKE_PROJECT_NAME} MATCHES "Classic")
+# >>> VMANGOS: vanilla config; the project name "MaNGOS" matches no expansion
+if ( VMANGOS OR ${CMAKE_PROJECT_NAME} MATCHES "Classic")
+# <<< VMANGOS
 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/playerbot/aiplayerbot.conf.dist.in ${CMAKE_CURRENT_BINARY_DIR}/aiplayerbot.conf.dist)
-endif()	
+endif()
 if ( ${CMAKE_PROJECT_NAME} MATCHES "TBC")
 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/playerbot/aiplayerbot.conf.dist.in.tbc ${CMAKE_CURRENT_BINARY_DIR}/aiplayerbot.conf.dist)
 endif()	
