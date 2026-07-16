@@ -240,8 +240,13 @@ namespace ai
         virtual std::string Format() override
         {
             CreatureDataPair const* creatureDataPair = this->Calculate();
+#ifdef VMANGOS
+            CreatureInfo const* bmTemplate = sObjectMgr.GetCreatureTemplate(creatureDataPair->second.creature_id[0]);
+            return creatureDataPair ? bmTemplate->name : "<none>";
+#else
             CreatureInfo const* bmTemplate = ObjectMgr::GetCreatureTemplate(creatureDataPair->second.id);
             return creatureDataPair ? bmTemplate->Name : "<none>";
+#endif
         }
     };
 

@@ -63,17 +63,30 @@ namespace ai
         WorldPosition(const uint32 mapid, const float x, const float y, const float z = 0, float orientation = 0) : WorldLocation(mapid, x, y, z, orientation) {}
         WorldPosition(const uint32 mapId, const Position& pos) : WorldLocation(mapId, pos.GetPositionX(), pos.GetPositionY(), pos.GetPositionZ(), pos.GetPositionO()) {}
         WorldPosition(const WorldObject* wo) { if (wo) { set(WorldLocation(wo->GetMapId(), wo->GetPositionX(), wo->GetPositionY(), wo->GetPositionZ(), wo->GetOrientation())); } }
+#ifdef VMANGOS
+        // vmangos CreatureData/GameObjectData store a nested WorldLocation `position`.
+        WorldPosition(const CreatureDataPair* cdPair) { if (cdPair) { set(WorldLocation(cdPair->second.position.mapId, cdPair->second.position.x, cdPair->second.position.y, cdPair->second.position.z, cdPair->second.position.o)); } }
+        WorldPosition(const GameObjectDataPair* cdPair) { if (cdPair) { set(WorldLocation(cdPair->second.position.mapId, cdPair->second.position.x, cdPair->second.position.y, cdPair->second.position.z, cdPair->second.position.o)); } }
+#else
         WorldPosition(const CreatureDataPair* cdPair) { if (cdPair) { set(WorldLocation(cdPair->second.mapid, cdPair->second.posX, cdPair->second.posY, cdPair->second.posZ, cdPair->second.orientation)); } }
         WorldPosition(const GameObjectDataPair* cdPair) { if (cdPair) { set(WorldLocation(cdPair->second.mapid, cdPair->second.posX, cdPair->second.posY, cdPair->second.posZ, cdPair->second.orientation)); } }
+#endif
         WorldPosition(const uint32 mapId, const GuidPosition& guidP, uint32 instanceId);
         WorldPosition(const std::vector<WorldPosition*>& list, const WorldPositionConst conType);
         WorldPosition(const std::vector<WorldPosition>& list, const WorldPositionConst conType);
         WorldPosition(const uint32 mapid, const GridPair grid) : WorldLocation(mapid, (int32(grid.x_coord) - CENTER_GRID_ID - 0.5)* SIZE_OF_GRIDS + CENTER_GRID_OFFSET, (int32(grid.y_coord) - CENTER_GRID_ID - 0.5)* SIZE_OF_GRIDS + CENTER_GRID_OFFSET, 0, 0) {}
         WorldPosition(const uint32 mapid, const CellPair cell) : WorldLocation(mapid, (int32(cell.x_coord) - CENTER_GRID_CELL_ID - 0.5)* SIZE_OF_GRID_CELL + CENTER_GRID_CELL_OFFSET, (int32(cell.y_coord) - CENTER_GRID_CELL_ID - 0.5)* SIZE_OF_GRID_CELL + CENTER_GRID_CELL_OFFSET, 0, 0) {}
         WorldPosition(const uint32 mapid, const mGridPair grid) : WorldLocation(mapid, (32 - grid.first)* SIZE_OF_GRIDS, (32 - grid.second)* SIZE_OF_GRIDS, 0, 0) {}
+#ifdef VMANGOS
+        // vmangos: SpellTargetPosition is a typedef for WorldLocation; WorldSafeLocsEntry has no orientation field.
+        WorldPosition(const SpellTargetPosition* pos) : WorldLocation(pos->mapId, pos->x, pos->y, pos->z) {}
+        WorldPosition(const TaxiNodesEntry* pos) : WorldLocation(pos->map_id, pos->x, pos->y, pos->z) {}
+        WorldPosition(const WorldSafeLocsEntry* pos) : WorldLocation(pos->map_id, pos->x, pos->y, pos->z) {} // VMANGOS-TODO: no orientation field
+#else
         WorldPosition(const SpellTargetPosition* pos) : WorldLocation(pos->target_mapId, pos->target_X, pos->target_Y, pos->target_Z) {}
         WorldPosition(const TaxiNodesEntry* pos) : WorldLocation(pos->map_id, pos->x, pos->y, pos->z) {}
         WorldPosition(const WorldSafeLocsEntry* pos) : WorldLocation(pos->map_id, pos->x, pos->y, pos->z, pos->o) {}
+#endif
         WorldPosition(const PlayerInfo* pos) : WorldLocation(pos->mapId,pos->positionX, pos->positionY, pos->positionZ, pos->orientation) {}
         WorldPosition(const Vector3& pos, const uint32 mapId = 0, float o = 0) : WorldLocation(mapId, pos.x, pos.y, pos.z, o) {}
 
@@ -299,7 +312,12 @@ namespace ai
             return isValid() && isVmapLoaded() ? sTerrainMgr.GetAreaFlag(getMapId(), coord_x, coord_y, coord_z) : 0; };
         AreaTableEntry const* GetArea() const;
         std::string getAreaName(const bool fullName = true, const bool zoneName = false) const;
+#ifdef VMANGOS
+        // VMANGOS-TODO: vmangos TerrainInfo has no GetAreaName / WMO name override.
+        std::string getAreaOverride() const { return ""; }
+#else
         std::string getAreaOverride() const { if (!getTerrain()) return "";  AreaNameInfo nameInfo = getTerrain()->GetAreaName(coord_x, coord_y, coord_z, 0); return nameInfo.wmoNameOverride ? nameInfo.wmoNameOverride : ""; }
+#endif
         int32 getAreaLevel() const;
 
         bool HasAreaFlag(const AreaFlags flag = AREA_FLAG_CAPITAL) const;

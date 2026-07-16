@@ -17,10 +17,10 @@ float ServerFacade::GetDistance(Unit *unit, WorldObject* wo)
         return false;
 
     float dist =
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
     unit->GetDistance(wo);
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
     sqrt(unit->GetDistance(wo->GetPositionX(), wo->GetPositionY(), wo->GetPositionZ(), DIST_CALC_NONE));
 #endif
     return round(dist * 10.0f) / 10.0f;
@@ -29,10 +29,10 @@ float ServerFacade::GetDistance(Unit *unit, WorldObject* wo)
 float ServerFacade::GetDistance(Unit *unit, float x, float y, float z)
 {
     float dist =
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
     unit->GetDistance(x, y, z);
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
     sqrt(unit->GetDistance(x, y, z, DIST_CALC_NONE));
 #endif
     return round(dist * 10.0f) / 10.0f;
@@ -44,10 +44,10 @@ float ServerFacade::GetDistance2d(Unit *unit, WorldObject* wo)
         return false;
 
     float dist =
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
     unit->GetDistance2d(wo);
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
     sqrt(unit->GetDistance2d(wo->GetPositionX(), wo->GetPositionY(), DIST_CALC_NONE));
 #endif
     return round(dist * 10.0f) / 10.0f;
@@ -56,10 +56,10 @@ float ServerFacade::GetDistance2d(Unit *unit, WorldObject* wo)
 float ServerFacade::GetDistance2d(Unit *unit, float x, float y)
 {
     float dist =
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
     unit->GetDistance2d(x, y);
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
     sqrt(unit->GetDistance2d(x, y, DIST_CALC_NONE));
 #endif
     return round(dist * 10.0f) / 10.0f;
@@ -99,40 +99,40 @@ void ServerFacade::SetFacingTo(Unit* unit, float angle, bool force)
 
 bool ServerFacade::IsFriendlyTo(Unit* bot, Unit* to)
 {
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
     return bot->IsFriendlyTo(to);
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
     return bot->IsFriend(to);
 #endif
 }
 
 bool ServerFacade::IsHostileTo(Unit* bot, Unit* to)
 {
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
     return bot->IsHostileTo(to);
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
     return bot->IsEnemy(to);
 #endif
 }
 
 bool ServerFacade::IsFriendlyTo(WorldObject* bot, Unit* to)
 {
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
     return bot->IsFriendlyTo(to);
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
     return bot->IsFriend(to);
 #endif
 }
 
 bool ServerFacade::IsHostileTo(WorldObject* bot, Unit* to)
 {
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
     return bot->IsHostileTo(to);
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
     return bot->IsEnemy(to);
 #endif
 }
@@ -140,10 +140,10 @@ bool ServerFacade::IsHostileTo(WorldObject* bot, Unit* to)
 
 bool ServerFacade::IsSpellReady(Player* bot, uint32 spell, uint32 itemId)
 {
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
     return !bot->HasSpellCooldown(spell);
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
     if (itemId)
     {
         const ItemPrototype* proto = sObjectMgr.GetItemPrototype(itemId);
@@ -158,20 +158,20 @@ bool ServerFacade::IsSpellReady(Player* bot, uint32 spell, uint32 itemId)
 
 bool ServerFacade::IsUnderwater(Unit *unit)
 {
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
     return unit->IsUnderWater();
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
     return unit->IsUnderwater();
 #endif
 }
 
 FactionTemplateEntry const* ServerFacade::GetFactionTemplateEntry(Unit *unit)
 {
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
     return unit->getFactionTemplateEntry();
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
     return unit->GetFactionTemplateEntry();
 #endif
 }
@@ -193,10 +193,10 @@ float ServerFacade::GetChaseOffset(Unit* target)
 
 bool ServerFacade::isMoving(Unit *unit)
 {
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
     return unit->m_movementInfo.HasMovementFlag(movementFlagsMask);
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
 #ifdef MANGOSBOT_ONE
     return !unit->IsStopped() || unit->IsFalling() || unit->IsJumping();
 #else

@@ -13,8 +13,14 @@ namespace ai
         GuidPosition(uint64 const& guid, WorldPosition const& pos) : ObjectGuid(guid), WorldPosition(pos) {};
         //template<class T>
         //GuidPosition(ObjectGuid guid, T) : ObjectGuid(guid) {WorldPosition::set(WorldPosition(T))};
+#ifdef VMANGOS
+        // vmangos CreatureData stores entries in a creature_id[] array (no `id`).
+        GuidPosition(CreatureDataPair const* dataPair) : ObjectGuid(HIGHGUID_UNIT, dataPair->second.creature_id[0], dataPair->first), WorldPosition(dataPair) {};
+        GuidPosition(GameObjectDataPair const* dataPair) : ObjectGuid(HIGHGUID_GAMEOBJECT, dataPair->second.id, dataPair->first), WorldPosition(dataPair) {};
+#else
         GuidPosition(CreatureDataPair const* dataPair) : ObjectGuid(HIGHGUID_UNIT, dataPair->second.id, dataPair->first), WorldPosition(dataPair) {};
         GuidPosition(GameObjectDataPair const* dataPair) : ObjectGuid(HIGHGUID_GAMEOBJECT, dataPair->second.id, dataPair->first), WorldPosition(dataPair) {};
+#endif
         GuidPosition(const WorldObject* wo) : WorldPosition(wo) { ObjectGuid::Set(wo->GetObjectGuid()); };
         GuidPosition(HighGuid hi, uint32 entry, uint32 counter = 1, WorldPosition pos = WorldPosition()) : ObjectGuid(hi, entry, counter), WorldPosition(pos) {};
         GuidPosition(std::string qualifier);
@@ -33,7 +39,11 @@ namespace ai
 
         virtual std::string to_string() const override;
 
+#ifdef VMANGOS
+        CreatureData const* GetCreatureData() const { return IsCreature() ? sObjectMgr.GetCreatureData(GetCounter()) : nullptr; }
+#else
         CreatureData* GetCreatureData() const { return IsCreature() ? sObjectMgr.GetCreatureData(GetCounter()) : nullptr; }
+#endif
         CreatureInfo const* GetCreatureTemplate() const { return IsCreature() ? sObjectMgr.GetCreatureTemplate(GetEntry()) : nullptr; };
 
         GameObjectData const* GetGameObjectData() const { return IsGameObject() ? sObjectMgr.GetGOData(GetCounter()) : nullptr; }
@@ -51,7 +61,11 @@ namespace ai
 
         void updatePosition(uint32 m_instanceId) { WorldObject* wo = GetWorldObject(m_instanceId); if (wo) WorldPosition::set(wo); }
 
+#ifdef VMANGOS
+        bool HasNpcFlag(NPCFlags flag) { return IsCreature() && GetCreatureTemplate()->npc_flags & flag; }
+#else
         bool HasNpcFlag(NPCFlags flag) { return IsCreature() && GetCreatureTemplate()->NpcFlags & flag; }
+#endif
         bool isGoType(GameobjectTypes type) { return IsGameObject() && GetGameObjectInfo()->type == type; }
 
         const FactionTemplateEntry* GetFactionTemplateEntry() const;
@@ -71,8 +85,14 @@ namespace ai
 
         virtual std::string print();
 
+#ifdef VMANGOS
+        // vmangos ObjectGuid also has IsEmpty(); qualify to the position one.
+        operator bool() const { return getX() != 0 || getY() != 0 || getZ() != 0 || !WorldLocation::IsEmpty(); }
+        bool operator!() const { return getX() == 0 && getY() == 0 && getZ() == 0 && WorldLocation::IsEmpty(); }
+#else
         operator bool() const { return getX() != 0 || getY() != 0 || getZ() != 0 || !IsEmpty(); }
         bool operator!() const { return getX() == 0 && getY() == 0 && getZ() == 0 && IsEmpty(); }
+#endif
         bool operator== (ObjectGuid const& guid) const { return GetRawValue() == guid.GetRawValue(); }
         bool operator!= (ObjectGuid const& guid) const { return GetRawValue() != guid.GetRawValue(); }
         bool operator< (ObjectGuid const& guid) const { return GetRawValue() < guid.GetRawValue(); }

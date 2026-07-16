@@ -4,10 +4,10 @@
 #include "Common.h"
 #include "Entities/Unit.h"
 #include "Entities/Player.h"
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
 #include "Entities/GameObject.h"
 #endif
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
 #include "Object/GameObject.h"
 #endif
 #include "BattleGround/BattleGroundMgr.h"
@@ -29,10 +29,10 @@ class ServerFacade
 	public:
         bool UnitIsDead(Unit *unit)
         {
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
             return unit->IsDead();
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
             return unit->IsDead();
 #endif
         }
@@ -43,34 +43,34 @@ class ServerFacade
 
         DeathState GetDeathState(Unit *unit)
         {
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
 #ifndef MANGOSBOT_TWO
             return unit->GetDeathState();
 #else
             return unit->getDeathState();
 #endif
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
             return unit->GetDeathState();
 #endif
         }
 
         bool isSpawned(GameObject *go)
         {
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
             return go->isSpawned();
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
             return go->IsSpawned();
 #endif
         }
 
         bool IsAlive(Unit *unit)
         {
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
             return unit->IsAlive();
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
             return unit->IsAlive();
 #endif
         }
@@ -79,114 +79,114 @@ class ServerFacade
 
         bool IsInCombat(Unit *unit)
         {
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
             return unit->IsInCombat();
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
             return unit->IsInCombat();
 #endif
         }
 
         bool IsFrozen(Unit *unit)
         {
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
             return unit->IsFrozen();
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
             return unit->isFrozen();
 #endif
         }
 
         bool IsInRoots(Unit *unit)
         {
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
             return unit->IsInRoots();
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
             return unit->isInRoots();
 #endif
         }
 
         bool IsCharmed(Unit *unit)
         {
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
             return unit->GetCharmerGuid() && unit->GetCharmerGuid().IsPlayer();
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
             return unit->HasCharmer();
 #endif
         }
 
         bool IsFeared(Unit *unit)
         {
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
 #ifndef MANGOSBOT_TWO
             return unit->IsFeared();
 #else
             return unit->isFeared();
 #endif
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
             return unit->isFeared();
 #endif
         }
 
         bool IsInFront(Unit *unit, WorldObject const* target, float distance,  float arc /*= M_PI_F*/)
         {
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
             return unit->IsInFront(target, distance, arc);
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
             return unit->isInFront(target, distance, arc);
 #endif
         }
 
         HostileRefManager& GetHostileRefManager(Unit *unit)
         {
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
             return unit->GetHostileRefManager();
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
             return unit->getHostileRefManager();
 #endif
         }
 
         ThreatManager& GetThreatManager(Unit *unit)
         {
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
             return unit->GetThreatManager();
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
             return unit->getThreatManager();
 #endif
         }
 
         void SendPacket(Player *player, WorldPacket &packet)
         {
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
             return player->GetSession()->SendPacket(&packet);
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
             return player->GetSession()->SendPacket(packet);
 #endif
         }
 
         void SendMessageToSet(Player *player, WorldPacket &packet, bool self)
         {
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
             return player->SendMessageToSet(&packet, self);
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
             return player->SendMessageToSet(packet, self);
 #endif
         }
 
         SpellEntry const* LookupSpellInfo(uint32 spellId)
         {
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
             return sSpellStore.LookupEntry(spellId);
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
             return sSpellTemplate.LookupEntry<SpellEntry>(spellId);
 #endif
         }
@@ -198,20 +198,20 @@ class ServerFacade
 
         uint32 GetSpellInfoRows()
         {
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
             return sSpellStore.GetNumRows();
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
             return sSpellTemplate.GetMaxEntry();
 #endif
         }
 
         bool IsWithinLOSInMap(Player* bot, WorldObject *wo)
         {
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
             return bot->IsWithinLOSInMap(wo);
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
             return bot->IsWithinLOSInMap(wo, true);
 #endif
         }
@@ -244,20 +244,20 @@ class ServerFacade
 
         BattleGroundTypeId BgTemplateId(BattleGroundQueueTypeId queueTypeId)
         {
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
             return sBattleGroundMgr.BGTemplateId(queueTypeId);
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
             return sBattleGroundMgr.BgTemplateId(queueTypeId);
 #endif
         }
 #ifndef MANGOSBOT_ZERO
         ArenaType BgArenaType(BattleGroundQueueTypeId queueTypeId)
         {
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
             return sBattleGroundMgr.BGArenaType(queueTypeId);
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
             return sBattleGroundMgr.BgArenaType(queueTypeId);
 #endif
         }

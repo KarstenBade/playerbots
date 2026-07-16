@@ -50,6 +50,14 @@
 #include <regex>
 #include <numeric>
 
+// >>> VMANGOS: central compat symbols, after all core headers and before the
+// module headers so wrappers/stubs are visible everywhere. See core repo
+// src/modules/PlayerbotsCompat/VmangosBotCompat.h.
+#ifdef VMANGOS
+#include "VmangosBotCompat.h"
+#endif
+// <<< VMANGOS
+
 // Playerbot core
 #include "playerbot/playerbot.h"
 
