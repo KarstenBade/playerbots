@@ -2017,7 +2017,7 @@ Item* RandomPlayerbotMgr::CreateTempItem(uint32 item, uint32 count, Player const
     if (count < 1)
         return nullptr;                                        // don't create item at zero count
 
-    if (ItemPrototype const* pProto = ObjectMgr::GetItemPrototype(item))
+    if (ItemPrototype const* pProto = VMANGOS_GET_ITEM_PROTOTYPE(item))
     {
         if (count > pProto->GetMaxStackSize())
             count = pProto->GetMaxStackSize();
@@ -2868,7 +2868,7 @@ void RandomPlayerbotMgr::PrepareTeleportCache()
     //Creatures.
     for (auto& creatureData : WorldPosition().getCreaturesNear(0, 0))
     {
-        CreatureInfo const* cInfo = ObjectMgr::GetCreatureTemplate(creatureData->second.id);
+        CreatureInfo const* cInfo = VMANGOS_GET_CREATURE_TEMPLATE(creatureData->second.id);
 
         if (!cInfo)
             continue;
@@ -4055,7 +4055,7 @@ void RandomPlayerbotMgr::Remove(Player* bot)
 
 const CreatureDataPair* RandomPlayerbotMgr::GetCreatureDataByEntry(uint32 entry)
 {
-    if (entry != 0 && ObjectMgr::GetCreatureTemplate(entry))
+    if (entry != 0 && VMANGOS_GET_CREATURE_TEMPLATE(entry))
     {
         FindCreatureData worker(entry, NULL);
         sObjectMgr.DoCreatureData(worker);

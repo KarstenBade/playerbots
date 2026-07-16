@@ -202,7 +202,7 @@ bool CastCustomSpellAction::Execute(Event& event)
         else
         {
 
-            ItemPrototype const* proto = ObjectMgr::GetItemPrototype(newItemId);
+            ItemPrototype const* proto = VMANGOS_GET_ITEM_PROTOTYPE(newItemId);
             replyArgs["%spell"] = ChatHelper::formatItem(proto);
         }
     }    
@@ -683,7 +683,7 @@ bool CraftRandomItemAction::Execute(Event& event)
             if (!newItemId)
                 continue;
 
-            ItemPrototype const* proto = ObjectMgr::GetItemPrototype(newItemId);
+            ItemPrototype const* proto = VMANGOS_GET_ITEM_PROTOTYPE(newItemId);
 
             if (!proto)
                 continue;
@@ -730,7 +730,7 @@ bool DisenchantRandomItemAction::Execute(Event& event)
 
     for (auto& item: items)
     {
-        ItemPrototype const* proto = ObjectMgr::GetItemPrototype(item);
+        ItemPrototype const* proto = VMANGOS_GET_ITEM_PROTOTYPE(item);
 
         if (!proto)
             continue;

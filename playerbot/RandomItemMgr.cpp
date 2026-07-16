@@ -3014,7 +3014,7 @@ bool RandomItemMgr::CanBuyFromVendor(Player *player, uint32 itemId, uint32 creat
 
         if (crItem && crItem->item == itemId)
         {
-            ItemPrototype const* pProto = ObjectMgr::GetItemPrototype(itemId);
+            ItemPrototype const* pProto = VMANGOS_GET_ITEM_PROTOTYPE(itemId);
             if (pProto)
             {
                 // when no faction required but rank > 0 will be used faction id from the vendor faction template to compare the rank

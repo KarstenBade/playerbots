@@ -638,7 +638,7 @@ bool BossTravelDestination::IsPossible(const PlayerTravelInfo& info) const
     if (!info.GetBoolValue("can fight boss"))
         return false;
 
-    CreatureInfo const* cInfo = ObjectMgr::GetCreatureTemplate(GetEntry());
+    CreatureInfo const* cInfo = VMANGOS_GET_CREATURE_TEMPLATE(GetEntry());
 
     if ((int32)cInfo->MaxLevel > info.GetLevel() + 3)
         return false;
@@ -1143,7 +1143,7 @@ int32 TravelMgr::GetAreaLevel(uint32 area_id)
             continue;
 
         CreatureData const cData = creaturePair->second;
-        CreatureInfo const* cInfo = ObjectMgr::GetCreatureTemplate(cData.id);
+        CreatureInfo const* cInfo = VMANGOS_GET_CREATURE_TEMPLATE(cData.id);
 
         if (!cInfo)
             continue;
@@ -1270,7 +1270,7 @@ void TravelMgr::SetMobAvoidAreaMap(uint32 mapId)
     for (auto& creaturePair : creatures)
     {
         CreatureData const cData = creaturePair->second;
-        CreatureInfo const* cInfo = ObjectMgr::GetCreatureTemplate(cData.id);
+        CreatureInfo const* cInfo = VMANGOS_GET_CREATURE_TEMPLATE(cData.id);
 
         if (!cInfo)
             continue;
@@ -1549,7 +1549,7 @@ void TravelMgr::LoadQuestTravelTable()
         for (auto& creaturePair : WorldPosition().getCreaturesNear())
         {
             CreatureData const cData = creaturePair->second;
-            CreatureInfo const* cInfo = ObjectMgr::GetCreatureTemplate(cData.id);
+            CreatureInfo const* cInfo = VMANGOS_GET_CREATURE_TEMPLATE(cData.id);
 
             if (!cInfo)
                 continue;

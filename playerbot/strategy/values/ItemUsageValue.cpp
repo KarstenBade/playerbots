@@ -1399,7 +1399,7 @@ void ItemUsageValue::PopulateReagentItemIdsForCraftableItemIds()
 
                             uint32 reagentItemId = spellInfo->Reagent[x];
                             uint32 reagentsRequiredCount = spellInfo->ReagentCount[x];
-                            if (reagentItemId && ObjectMgr::GetItemPrototype(reagentItemId))
+                            if (reagentItemId && VMANGOS_GET_ITEM_PROTOTYPE(reagentItemId))
                             {
                                 m_craftingReagentItemIdsForCraftableItem[craftedItemId].push_back({ reagentItemId , reagentsRequiredCount });
                             }
@@ -1424,7 +1424,7 @@ void ItemUsageValue::PopulateSoldByVendorItemIds()
             if (!entry)
                 continue;
 
-            if (!ObjectMgr::GetItemPrototype(entry))
+            if (!VMANGOS_GET_ITEM_PROTOTYPE(entry))
                 continue;
 
             m_allItemIdsSoldByAnyVendors.insert(fields[0].GetUInt32());
@@ -1442,7 +1442,7 @@ void ItemUsageValue::PopulateSoldByVendorItemIds()
             if (!entry)
                 continue;
 
-            if (!ObjectMgr::GetItemPrototype(entry))
+            if (!VMANGOS_GET_ITEM_PROTOTYPE(entry))
                 continue;
 
             m_itemIdsSoldByAnyVendorsWithLimitedMaxCount.insert(fields[0].GetUInt32());
@@ -1834,7 +1834,7 @@ uint32 ItemUsageValue::GetItemBaseValue(ItemPrototype const* proto, uint8 maxRea
 
         for (auto idCountPair : GetAllReagentItemIdsForCraftingItem(proto))
         {
-            ItemPrototype const* reagentProto = ObjectMgr::GetItemPrototype(idCountPair.first);
+            ItemPrototype const* reagentProto = VMANGOS_GET_ITEM_PROTOTYPE(idCountPair.first);
             totalReagentsValue += GetItemBaseValue(reagentProto, maxReagentLevel) * idCountPair.second;
         }
 

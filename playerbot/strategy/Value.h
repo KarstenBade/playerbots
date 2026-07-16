@@ -244,7 +244,7 @@ namespace ai
             CreatureInfo const* bmTemplate = sObjectMgr.GetCreatureTemplate(creatureDataPair->second.creature_id[0]);
             return creatureDataPair ? bmTemplate->name : "<none>";
 #else
-            CreatureInfo const* bmTemplate = ObjectMgr::GetCreatureTemplate(creatureDataPair->second.id);
+            CreatureInfo const* bmTemplate = VMANGOS_GET_CREATURE_TEMPLATE(creatureDataPair->second.id);
             return creatureDataPair ? bmTemplate->Name : "<none>";
 #endif
         }

@@ -168,7 +168,7 @@ void ChatReplyAction::GetAIChatPlaceholders(std::map<std::string, std::string>& 
     {
         Creature* creature = (Creature*)unit;
 
-        CreatureInfo const* cInfo = ObjectMgr::GetCreatureTemplate(creature->GetEntry());
+        CreatureInfo const* cInfo = VMANGOS_GET_CREATURE_TEMPLATE(creature->GetEntry());
 
         switch (creature->GetCreatureType())
         {

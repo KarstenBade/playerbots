@@ -160,7 +160,7 @@ EntryTravelPurposeMap EntryTravelPurposeMapValue::Calculate()
 
     for (uint32 entry = 0; entry < sGOStorage.GetMaxEntry(); ++entry)
     {
-        GameObjectInfo const* gInfo = ObjectMgr::GetGameObjectInfo(entry);
+        GameObjectInfo const* gInfo = VMANGOS_GET_GAMEOBJECT_INFO(entry);
 
         if (!gInfo)
             continue;
@@ -219,7 +219,7 @@ uint32 EntryTravelPurposeMapValue::SkillIdToGatherEntry(int32 entry)
     }
     else
     {
-        GameObjectInfo const* gInfo = ObjectMgr::GetGameObjectInfo(entry * -1);
+        GameObjectInfo const* gInfo = VMANGOS_GET_GAMEOBJECT_INFO(entry * -1);
 
         if (uint32 lockId = gInfo->GetLockId())
         {

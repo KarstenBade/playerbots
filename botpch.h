@@ -55,6 +55,13 @@
 // src/modules/PlayerbotsCompat/VmangosBotCompat.h.
 #ifdef VMANGOS
 #include "VmangosBotCompat.h"
+#else
+// Fallback for the un-rewritten mangos/cmangos dialects: the module's call
+// sites use these macros unconditionally (see VmangosBotCompat.h), so define
+// them as a passthrough to the original static-call syntax here.
+#define VMANGOS_GET_CREATURE_TEMPLATE(id) ObjectMgr::GetCreatureTemplate(id)
+#define VMANGOS_GET_GAMEOBJECT_INFO(id) ObjectMgr::GetGameObjectInfo(id)
+#define VMANGOS_GET_ITEM_PROTOTYPE(id) ObjectMgr::GetItemPrototype(id)
 #endif
 // <<< VMANGOS
 

@@ -130,7 +130,7 @@ TestResult CommandSetupForceCompleteQuest::Execute(const std::string& params, Pl
         }
         else if (creature > 0)
         {
-            CreatureInfo const* cInfo = ObjectMgr::GetCreatureTemplate(creature);
+            CreatureInfo const* cInfo = VMANGOS_GET_CREATURE_TEMPLATE(creature);
             if (cInfo)
             {
                 for (uint32 z = 0; z < creatureCount; ++z)
@@ -225,7 +225,7 @@ TestResult CommandSetupRewardQuest::Execute(const std::string& params, Player* b
         }
         else if (creature > 0)
         {
-            CreatureInfo const* cInfo = ObjectMgr::GetCreatureTemplate(creature);
+            CreatureInfo const* cInfo = VMANGOS_GET_CREATURE_TEMPLATE(creature);
             if (cInfo)
                 for (uint32 z = 0; z < creatureCount; ++z)
                     bot->KilledMonster(cInfo, nullptr);

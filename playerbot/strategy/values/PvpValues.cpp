@@ -72,7 +72,7 @@ CreatureDataPair const* BgMasterValue::NearestBm(bool allowDead)
         if (rbmPair && rDist <= dist)
             continue;
 
-        CreatureInfo const* bmTemplate = ObjectMgr::GetCreatureTemplate(bmPair->second.id);
+        CreatureInfo const* bmTemplate = VMANGOS_GET_CREATURE_TEMPLATE(bmPair->second.id);
 
         if (!bmTemplate)
             continue;

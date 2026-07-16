@@ -132,7 +132,7 @@ bool InitializePetAction::isUseful()
                 {
                     Field* fields = queryResult->Fetch();
                     const uint32 entry = fields[1].GetUInt32();
-                    hasTamedPet = ObjectMgr::GetCreatureTemplate(entry);
+                    hasTamedPet = VMANGOS_GET_CREATURE_TEMPLATE(entry);
                 }
             }
 

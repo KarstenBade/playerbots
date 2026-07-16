@@ -58,7 +58,7 @@ void TravelNodePath::calculateCost(bool distanceOnly)
                 for (auto& creaturePair : point.getCreaturesNear(50)) //Agro radius + 5
                 {
                     CreatureData const cData = creaturePair->second;
-                    CreatureInfo const* cInfo = ObjectMgr::GetCreatureTemplate(cData.id);
+                    CreatureInfo const* cInfo = VMANGOS_GET_CREATURE_TEMPLATE(cData.id);
 
                     if (cInfo)
                     {
@@ -2121,7 +2121,7 @@ void TravelNodeMap::generateNpcNodes()
     for (auto& creaturePair : WorldPosition().getCreaturesNear())
     {
         GuidPosition guidP(creaturePair);
-        CreatureInfo const* cInfo = ObjectMgr::GetCreatureTemplate(guidP.GetEntry());
+        CreatureInfo const* cInfo = VMANGOS_GET_CREATURE_TEMPLATE(guidP.GetEntry());
 
         if (!cInfo)
             continue;
@@ -2165,7 +2165,7 @@ void TravelNodeMap::generateNpcNodes()
         if (!guidP)
             continue;
 
-        CreatureInfo const* cInfo = ObjectMgr::GetCreatureTemplate(guidP.GetEntry());
+        CreatureInfo const* cInfo = VMANGOS_GET_CREATURE_TEMPLATE(guidP.GetEntry());
 
         if (!cInfo)
             continue;

@@ -149,7 +149,7 @@ void SuggestWhatToDoAction::grindMaterials()
     {
         uint32 randomItemId = vec[urand() % vec.size()];
 
-        const ItemPrototype* proto = ObjectMgr::GetItemPrototype(randomItemId);
+        const ItemPrototype* proto = VMANGOS_GET_ITEM_PROTOTYPE(randomItemId);
         if (proto)
         {
             BroadcastHelper::BroadcastSuggestGrindMaterials(ai, ai->GetChatHelper()->formatItem(proto), bot);
@@ -332,4 +332,4 @@ bool SuggestTradeAction::Execute(Event& event)
     BroadcastHelper::BroadcastSuggestSell(ai, proto, count, price, bot);
 
     return true;
-}
+}

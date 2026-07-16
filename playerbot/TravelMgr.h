@@ -173,7 +173,7 @@ namespace ai
 	class EntryTravelDestination : public TravelDestination
 	{
 	public:
-		EntryTravelDestination(TravelDestinationPurpose purpose, int32 entry) : TravelDestination(), purpose(purpose), entry(entry) { if (entry > 0) creatureInfo = ObjectMgr::GetCreatureTemplate(entry); else goInfo = ObjectMgr::GetGameObjectInfo(-1 * entry); }
+		EntryTravelDestination(TravelDestinationPurpose purpose, int32 entry) : TravelDestination(), purpose(purpose), entry(entry) { if (entry > 0) creatureInfo = VMANGOS_GET_CREATURE_TEMPLATE(entry); else goInfo = VMANGOS_GET_GAMEOBJECT_INFO(-1 * entry); }
 		virtual int32 GetEntry() const override { return entry; }
 		virtual GameObjectInfo const* GetGoInfo() const { return goInfo; }
 		virtual CreatureInfo const* GetCreatureInfo() const { return creatureInfo; }

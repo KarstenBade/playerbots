@@ -4034,7 +4034,7 @@ bool BGTactics::moveToObjective()
                 return true;*/
 
         // don't try to move if already close
-        if (sqrt(bot->GetDistance(pos.x, pos.y, pos.z, DIST_CALC_NONE)) < 5.0f)
+        if (BOTDIST_SQRT(bot->GetDistance(pos.x, pos.y, pos.z, DIST_CALC_NONE)) < 5.0f)
         {
             resetObjective();
 
@@ -4114,7 +4114,7 @@ bool BGTactics::selectObjectiveWp(std::vector<BattleBotPath*> const& vPaths)
                 for (uint32 i = 0; i < pPath->size(); i++)
                 {
                     BattleBotWaypoint& waypoint = ((*pPath)[i]);
-                    float const distanceFromMeToPoint = sqrt(bot->GetDistance(waypoint.x, waypoint.y, waypoint.z, DIST_CALC_NONE));
+                    float const distanceFromMeToPoint = BOTDIST_SQRT(bot->GetDistance(waypoint.x, waypoint.y, waypoint.z, DIST_CALC_NONE));
                     if (distanceFromMeToPoint < maxDistanceToPoint && closestDistanceFromMeToPoint > distanceFromMeToPoint)
                     {
                         reverse = false;
@@ -4147,7 +4147,7 @@ bool BGTactics::selectObjectiveWp(std::vector<BattleBotPath*> const& vPaths)
                 for (uint32 i = 0; i < pPath->size(); i++)
                 {
                     BattleBotWaypoint& waypoint = ((*pPath)[i]);
-                    float const distanceFromMeToPoint = sqrt(bot->GetDistance(waypoint.x, waypoint.y, waypoint.z, DIST_CALC_NONE));
+                    float const distanceFromMeToPoint = BOTDIST_SQRT(bot->GetDistance(waypoint.x, waypoint.y, waypoint.z, DIST_CALC_NONE));
                     if (distanceFromMeToPoint < maxDistanceToPoint && closestDistanceFromMeToPoint > distanceFromMeToPoint)
                     {
                         reverse = true;
@@ -4288,7 +4288,7 @@ bool BGTactics::startNewPathBegin(std::vector<BattleBotPath*> const& vPaths)
             continue;
 
         BattleBotWaypoint* pStart = &((*pPath)[0]);
-        if (sqrt(bot->GetDistance(pStart->x, pStart->y, pStart->z, DIST_CALC_NONE)) < INTERACTION_DISTANCE)
+        if (BOTDIST_SQRT(bot->GetDistance(pStart->x, pStart->y, pStart->z, DIST_CALC_NONE)) < INTERACTION_DISTANCE)
             availablePaths.emplace_back(AvailablePath(pPath, false));
 
         // Some paths are not allowed backwards.
@@ -4296,7 +4296,7 @@ bool BGTactics::startNewPathBegin(std::vector<BattleBotPath*> const& vPaths)
             continue;
 
         BattleBotWaypoint* pEnd = &((*pPath)[(*pPath).size() - 1]);
-        if (sqrt(bot->GetDistance(pEnd->x, pEnd->y, pEnd->z, DIST_CALC_NONE)) < INTERACTION_DISTANCE)
+        if (BOTDIST_SQRT(bot->GetDistance(pEnd->x, pEnd->y, pEnd->z, DIST_CALC_NONE)) < INTERACTION_DISTANCE)
             availablePaths.emplace_back(AvailablePath(pPath, true));
     }
 
@@ -4344,7 +4344,7 @@ bool BGTactics::startNewPathFree(std::vector<BattleBotPath*> const& vPaths)
         for (uint32 i = 0; i < pPath->size(); i++)
         {
             BattleBotWaypoint& waypoint = ((*pPath)[i]);
-            float const distanceToPoint = sqrt(bot->GetDistance(waypoint.x, waypoint.y, waypoint.z, DIST_CALC_NONE));
+            float const distanceToPoint = BOTDIST_SQRT(bot->GetDistance(waypoint.x, waypoint.y, waypoint.z, DIST_CALC_NONE));
             if (distanceToPoint < closestDistance)
             {
                 pClosestPath = pPath;

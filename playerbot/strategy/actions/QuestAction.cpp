@@ -94,7 +94,7 @@ bool QuestAction::CompleteQuest(Player* player, uint32 entry)
         }
         else if (creature > 0)
         {
-            if (CreatureInfo const* cInfo = ObjectMgr::GetCreatureTemplate(creature))
+            if (CreatureInfo const* cInfo = VMANGOS_GET_CREATURE_TEMPLATE(creature))
                 for (uint16 z = 0; z < creaturecount; ++z)
                 {
                     player->KilledMonster(cInfo, nullptr);

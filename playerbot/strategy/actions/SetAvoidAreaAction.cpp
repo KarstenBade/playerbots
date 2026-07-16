@@ -23,7 +23,7 @@ bool SetAvoidAreaAction::Execute(Event& event)
 
     for (auto& target : targets)
     {
-        CreatureInfo const* cInfo = ObjectMgr::GetCreatureTemplate(target.GetEntry());
+        CreatureInfo const* cInfo = VMANGOS_GET_CREATURE_TEMPLATE(target.GetEntry());
 
         if (!cInfo)
             continue;

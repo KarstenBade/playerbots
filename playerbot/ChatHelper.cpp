@@ -495,9 +495,9 @@ std::string ChatHelper::formatWorldEntry(int32 entry)
     GameObjectInfo const* gInfo = NULL;
 
     if (entry > 0)
-        cInfo = ObjectMgr::GetCreatureTemplate(entry);
+        cInfo = VMANGOS_GET_CREATURE_TEMPLATE(entry);
     else
-        gInfo = ObjectMgr::GetGameObjectInfo(entry * -1);
+        gInfo = VMANGOS_GET_GAMEOBJECT_INFO(entry * -1);
 
     std::ostringstream out;
     out << "|cFFFFFF00|Hentry:" << abs(entry) << ":" << "|h[";
