@@ -17,10 +17,10 @@ float ServerFacade::GetDistance(Unit *unit, WorldObject* wo)
         return false;
 
     float dist =
-#if defined(MANGOS) || defined(VMANGOS)
+#ifdef MANGOS
     unit->GetDistance(wo);
 #endif
-#if defined(CMANGOS) && !defined(VMANGOS)
+#ifdef CMANGOS
     sqrt(unit->GetDistance(wo->GetPositionX(), wo->GetPositionY(), wo->GetPositionZ(), DIST_CALC_NONE));
 #endif
     return round(dist * 10.0f) / 10.0f;
@@ -29,10 +29,10 @@ float ServerFacade::GetDistance(Unit *unit, WorldObject* wo)
 float ServerFacade::GetDistance(Unit *unit, float x, float y, float z)
 {
     float dist =
-#if defined(MANGOS) || defined(VMANGOS)
+#ifdef MANGOS
     unit->GetDistance(x, y, z);
 #endif
-#if defined(CMANGOS) && !defined(VMANGOS)
+#ifdef CMANGOS
     sqrt(unit->GetDistance(x, y, z, DIST_CALC_NONE));
 #endif
     return round(dist * 10.0f) / 10.0f;
@@ -44,10 +44,10 @@ float ServerFacade::GetDistance2d(Unit *unit, WorldObject* wo)
         return false;
 
     float dist =
-#if defined(MANGOS) || defined(VMANGOS)
+#ifdef MANGOS
     unit->GetDistance2d(wo);
 #endif
-#if defined(CMANGOS) && !defined(VMANGOS)
+#ifdef CMANGOS
     sqrt(unit->GetDistance2d(wo->GetPositionX(), wo->GetPositionY(), DIST_CALC_NONE));
 #endif
     return round(dist * 10.0f) / 10.0f;
@@ -56,10 +56,10 @@ float ServerFacade::GetDistance2d(Unit *unit, WorldObject* wo)
 float ServerFacade::GetDistance2d(Unit *unit, float x, float y)
 {
     float dist =
-#if defined(MANGOS) || defined(VMANGOS)
+#ifdef MANGOS
     unit->GetDistance2d(x, y);
 #endif
-#if defined(CMANGOS) && !defined(VMANGOS)
+#ifdef CMANGOS
     sqrt(unit->GetDistance2d(x, y, DIST_CALC_NONE));
 #endif
     return round(dist * 10.0f) / 10.0f;
@@ -99,40 +99,40 @@ void ServerFacade::SetFacingTo(Unit* unit, float angle, bool force)
 
 bool ServerFacade::IsFriendlyTo(Unit* bot, Unit* to)
 {
-#if defined(MANGOS) || defined(VMANGOS)
+#ifdef MANGOS
     return bot->IsFriendlyTo(to);
 #endif
-#if defined(CMANGOS) && !defined(VMANGOS)
+#ifdef CMANGOS
     return bot->IsFriend(to);
 #endif
 }
 
 bool ServerFacade::IsHostileTo(Unit* bot, Unit* to)
 {
-#if defined(MANGOS) || defined(VMANGOS)
+#ifdef MANGOS
     return bot->IsHostileTo(to);
 #endif
-#if defined(CMANGOS) && !defined(VMANGOS)
+#ifdef CMANGOS
     return bot->IsEnemy(to);
 #endif
 }
 
 bool ServerFacade::IsFriendlyTo(WorldObject* bot, Unit* to)
 {
-#if defined(MANGOS) || defined(VMANGOS)
+#ifdef MANGOS
     return bot->IsFriendlyTo(to);
 #endif
-#if defined(CMANGOS) && !defined(VMANGOS)
+#ifdef CMANGOS
     return bot->IsFriend(to);
 #endif
 }
 
 bool ServerFacade::IsHostileTo(WorldObject* bot, Unit* to)
 {
-#if defined(MANGOS) || defined(VMANGOS)
+#ifdef MANGOS
     return bot->IsHostileTo(to);
 #endif
-#if defined(CMANGOS) && !defined(VMANGOS)
+#ifdef CMANGOS
     return bot->IsEnemy(to);
 #endif
 }
@@ -140,10 +140,10 @@ bool ServerFacade::IsHostileTo(WorldObject* bot, Unit* to)
 
 bool ServerFacade::IsSpellReady(Player* bot, uint32 spell, uint32 itemId)
 {
-#if defined(MANGOS) || defined(VMANGOS)
+#ifdef MANGOS
     return !bot->HasSpellCooldown(spell);
 #endif
-#if defined(CMANGOS) && !defined(VMANGOS)
+#ifdef CMANGOS
     if (itemId)
     {
         const ItemPrototype* proto = sObjectMgr.GetItemPrototype(itemId);
@@ -158,24 +158,32 @@ bool ServerFacade::IsSpellReady(Player* bot, uint32 spell, uint32 itemId)
 
 bool ServerFacade::IsUnderwater(Unit *unit)
 {
-#if defined(MANGOS) || defined(VMANGOS)
+#ifdef MANGOS
     return unit->IsUnderWater();
 #endif
-#if defined(CMANGOS) && !defined(VMANGOS)
+#ifdef CMANGOS
     return unit->IsUnderwater();
 #endif
 }
 
 FactionTemplateEntry const* ServerFacade::GetFactionTemplateEntry(Unit *unit)
 {
-#if defined(MANGOS) || defined(VMANGOS)
+#ifdef MANGOS
     return unit->getFactionTemplateEntry();
 #endif
-#if defined(CMANGOS) && !defined(VMANGOS)
+#ifdef CMANGOS
     return unit->GetFactionTemplateEntry();
 #endif
 }
 
+#ifdef VMANGOS
+// VMANGOS-TODO: vmangos ChaseMovementGenerator is a template
+// (ChaseMovementGenerator<T>) and doesn't expose GetCurrentTarget/GetAngle/
+// GetOffset the way cmangos does. Chase introspection returns defaults for now.
+Unit* ServerFacade::GetChaseTarget(Unit* /*target*/) { return nullptr; }
+float ServerFacade::GetChaseAngle(Unit* /*target*/) { return 0.0f; }
+float ServerFacade::GetChaseOffset(Unit* /*target*/) { return 0.0f; }
+#else
 Unit* ServerFacade::GetChaseTarget(Unit* target)
 {
     return static_cast<ChaseMovementGenerator const*>(target->GetMotionMaster()->GetCurrent())->GetCurrentTarget();
@@ -190,13 +198,15 @@ float ServerFacade::GetChaseOffset(Unit* target)
 {
     return static_cast<ChaseMovementGenerator const*>(target->GetMotionMaster()->GetCurrent())->GetOffset();
 }
+#endif
 
 bool ServerFacade::isMoving(Unit *unit)
 {
-#if defined(MANGOS) || defined(VMANGOS)
+#ifdef VMANGOS
+    return unit->m_movementInfo.HasMovementFlag(MOVEFLAG_MASK_MOVING);
+#elif defined(MANGOS)
     return unit->m_movementInfo.HasMovementFlag(movementFlagsMask);
-#endif
-#if defined(CMANGOS) && !defined(VMANGOS)
+#elif defined(CMANGOS)
 #ifdef MANGOSBOT_ONE
     return !unit->IsStopped() || unit->IsFalling() || unit->IsJumping();
 #else

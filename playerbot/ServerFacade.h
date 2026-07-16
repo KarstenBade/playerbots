@@ -4,10 +4,10 @@
 #include "Common.h"
 #include "Entities/Unit.h"
 #include "Entities/Player.h"
-#if defined(CMANGOS) && !defined(VMANGOS)
+#ifdef CMANGOS
 #include "Entities/GameObject.h"
 #endif
-#if defined(MANGOS) || defined(VMANGOS)
+#ifdef MANGOS
 #include "Object/GameObject.h"
 #endif
 #include "BattleGround/BattleGroundMgr.h"
@@ -29,10 +29,10 @@ class ServerFacade
 	public:
         bool UnitIsDead(Unit *unit)
         {
-#if defined(MANGOS) || defined(VMANGOS)
+#ifdef MANGOS
             return unit->IsDead();
 #endif
-#if defined(CMANGOS) && !defined(VMANGOS)
+#ifdef CMANGOS
             return unit->IsDead();
 #endif
         }
@@ -43,14 +43,14 @@ class ServerFacade
 
         DeathState GetDeathState(Unit *unit)
         {
-#if defined(MANGOS) || defined(VMANGOS)
+#ifdef MANGOS
 #ifndef MANGOSBOT_TWO
             return unit->GetDeathState();
 #else
             return unit->getDeathState();
 #endif
 #endif
-#if defined(CMANGOS) && !defined(VMANGOS)
+#ifdef CMANGOS
             return unit->GetDeathState();
 #endif
         }
@@ -67,10 +67,10 @@ class ServerFacade
 
         bool IsAlive(Unit *unit)
         {
-#if defined(MANGOS) || defined(VMANGOS)
+#ifdef MANGOS
             return unit->IsAlive();
 #endif
-#if defined(CMANGOS) && !defined(VMANGOS)
+#ifdef CMANGOS
             return unit->IsAlive();
 #endif
         }
@@ -79,10 +79,10 @@ class ServerFacade
 
         bool IsInCombat(Unit *unit)
         {
-#if defined(MANGOS) || defined(VMANGOS)
+#ifdef MANGOS
             return unit->IsInCombat();
 #endif
-#if defined(CMANGOS) && !defined(VMANGOS)
+#ifdef CMANGOS
             return unit->IsInCombat();
 #endif
         }
@@ -133,10 +133,12 @@ class ServerFacade
 
         bool IsInFront(Unit *unit, WorldObject const* target, float distance,  float arc /*= M_PI_F*/)
         {
-#if defined(MANGOS) || defined(VMANGOS)
+#ifdef VMANGOS
+            // vmangos HasInArc has no distance parameter; distance is ignored.
+            return unit->HasInArc(target, arc);
+#elif defined(MANGOS)
             return unit->IsInFront(target, distance, arc);
-#endif
-#if defined(CMANGOS) && !defined(VMANGOS)
+#elif defined(CMANGOS)
             return unit->isInFront(target, distance, arc);
 #endif
         }
@@ -183,10 +185,11 @@ class ServerFacade
 
         SpellEntry const* LookupSpellInfo(uint32 spellId)
         {
-#if defined(MANGOS) || defined(VMANGOS)
+#ifdef VMANGOS
+            return sSpellMgr.GetSpellEntry(spellId);
+#elif defined(MANGOS)
             return sSpellStore.LookupEntry(spellId);
-#endif
-#if defined(CMANGOS) && !defined(VMANGOS)
+#elif defined(CMANGOS)
             return sSpellTemplate.LookupEntry<SpellEntry>(spellId);
 #endif
         }
@@ -198,10 +201,11 @@ class ServerFacade
 
         uint32 GetSpellInfoRows()
         {
-#if defined(MANGOS) || defined(VMANGOS)
+#ifdef VMANGOS
+            return sSpellMgr.GetMaxSpellId();
+#elif defined(MANGOS)
             return sSpellStore.GetNumRows();
-#endif
-#if defined(CMANGOS) && !defined(VMANGOS)
+#elif defined(CMANGOS)
             return sSpellTemplate.GetMaxEntry();
 #endif
         }
@@ -244,20 +248,20 @@ class ServerFacade
 
         BattleGroundTypeId BgTemplateId(BattleGroundQueueTypeId queueTypeId)
         {
-#if defined(MANGOS) || defined(VMANGOS)
+#ifdef MANGOS
             return sBattleGroundMgr.BGTemplateId(queueTypeId);
 #endif
-#if defined(CMANGOS) && !defined(VMANGOS)
+#ifdef CMANGOS
             return sBattleGroundMgr.BgTemplateId(queueTypeId);
 #endif
         }
 #ifndef MANGOSBOT_ZERO
         ArenaType BgArenaType(BattleGroundQueueTypeId queueTypeId)
         {
-#if defined(MANGOS) || defined(VMANGOS)
+#ifdef MANGOS
             return sBattleGroundMgr.BGArenaType(queueTypeId);
 #endif
-#if defined(CMANGOS) && !defined(VMANGOS)
+#ifdef CMANGOS
             return sBattleGroundMgr.BgArenaType(queueTypeId);
 #endif
         }
