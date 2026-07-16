@@ -102,7 +102,15 @@ bool PlayerbotAIConfig::Initialize()
         return false;
     }
 
+#ifdef VMANGOS
+    // vmangos's core Config exposes GetValues() directly (added under
+    // ENABLE_PLAYERBOTS), so no reinterpret_cast into a mirror layout is
+    // needed — and vmangos's Config layout differs, which would make the
+    // cast undefined behavior.
+    Config* configA = &config;
+#else
     ConfigAccess* configA = reinterpret_cast<ConfigAccess*>(&config);
+#endif
 
     BarGoLink::SetOutputState(config.GetBoolDefault("AiPlayerbot.ShowProgressBars", false));
     globalCoolDown = (uint32) config.GetIntDefault("AiPlayerbot.GlobalCooldown", 500);

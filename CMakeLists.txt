@@ -129,6 +129,11 @@ endif()
 # paths (with VMANGOS overrides where the APIs differ) and is vanilla-only.
 if (VMANGOS)
   add_definitions(-DCMANGOS -DVMANGOS -DMANGOSBOT_ZERO)
+  # The module's .cpp files never #include "botpch.h" directly — they rely on
+  # it being force-included as a precompiled header. Enable the module's PCH
+  # path (the if(PCH) blocks below) so botpch.h front-loads STL and core
+  # headers into every TU, as on cmangos.
+  set(PCH ON)
 else()
 # <<< VMANGOS
 # Define Core
