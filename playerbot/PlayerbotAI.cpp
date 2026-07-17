@@ -314,18 +314,26 @@ void PlayerbotAI::UpdateAI(uint32 elapsed, bool minimal)
                     LootAccess const* lootAccess = reinterpret_cast<LootAccess const*>(unitTarget->m_loot);
 #endif
                     // If the bot is actually one of the players looting
+#ifdef VMANGOS
+                    if (!lootAccess || !lootAccess->IsPlayerLooting(bot->GetObjectGuid()))
+#else
                     if (!lootAccess->m_playersLooting.contains(bot->GetObjectGuid()))
+#endif
                     {
                         // You shouldn't release if you aren't looting already
                         shouldRelease = false;
-                    }    
+                    }
                 }
                 else if (lootObject.IsGameObject())
                 {
                     GameObject* gameobjectTarget = (GameObject*)loot->GetLootTarget();
                     LootAccess const* lootAccess = reinterpret_cast<LootAccess const*>(gameobjectTarget->m_loot);
                     // If the bot is actually one of the players looting
+#ifdef VMANGOS
+                    if (!lootAccess->IsPlayerLooting(bot->GetObjectGuid()))
+#else
                     if (!lootAccess->m_playersLooting.contains(bot->GetObjectGuid()))
+#endif
                     {
                         // You shouldn't release if you aren't looting already
                         shouldRelease = false;
@@ -7118,7 +7126,7 @@ bool PlayerbotAI::HasItemInInventory(uint32 itemId)
 /*
 * @return true if has stacks which are not full for these items
 */
-bool PlayerbotAI::HasNotFullStacksInBagsForLootItems(LootItemList &lootItemList)
+bool PlayerbotAI::HasNotFullStacksInBagsForLootItems(LootItemPtrList &lootItemList)
 {
     for (auto lootItem : lootItemList)
     {
@@ -7130,7 +7138,11 @@ bool PlayerbotAI::HasNotFullStacksInBagsForLootItems(LootItemList &lootItemList)
                 {
                     if (Item* pItem = pBag->GetItemByPos(j))
                     {
+#ifdef VMANGOS
+                        if (pItem->GetProto()->ItemId == lootItem->itemid
+#else
                         if (pItem->GetProto()->ItemId == lootItem->itemId
+#endif
                             && pItem->GetCount() < pItem->GetMaxStackCount())
                         {
                             return true;
@@ -7144,7 +7156,11 @@ bool PlayerbotAI::HasNotFullStacksInBagsForLootItems(LootItemList &lootItemList)
         {
             if (Item* pItem = bot->GetItemByPos(INVENTORY_SLOT_BAG_0, i))
             {
+#ifdef VMANGOS
+                if (pItem->GetProto()->ItemId == lootItem->itemid
+#else
                 if (pItem->GetProto()->ItemId == lootItem->itemId
+#endif
                     && pItem->GetCount() < pItem->GetMaxStackCount())
                 {
                     return true;
@@ -7161,7 +7177,7 @@ bool PlayerbotAI::HasQuestItemsInWOLootList(WorldObject* wo)
     if (!wo)
         return false;
 
-    LootItemList lootItemList = {};
+    LootItemPtrList lootItemList = {};
 
 #ifdef VMANGOS
     Loot* woLoot = wo->ToCreature() ? wo->ToCreature()->m_loot
@@ -7181,11 +7197,15 @@ bool PlayerbotAI::HasQuestItemsInWOLootList(WorldObject* wo)
     return false;
 }
 
-bool PlayerbotAI::HasQuestItemsInLootList(LootItemList &lootItemList)
+bool PlayerbotAI::HasQuestItemsInLootList(LootItemPtrList &lootItemList)
 {
     for (auto lootItem : lootItemList)
     {
+#ifdef VMANGOS
+        if (lootItem->needs_quest)
+#else
         if (lootItem->lootItemType == LOOTITEM_TYPE_QUEST)
+#endif
         {
             return true;
         }
@@ -7209,7 +7229,7 @@ bool PlayerbotAI::CanLootSomethingFromWO(WorldObject* wo)
             {
                 return true;
             }
-            LootItemList lootItemList = {};
+            LootItemPtrList lootItemList = {};
 
             if (creature->m_loot)
                 creature->m_loot->GetLootItemsListFor(bot, lootItemList);
@@ -7225,7 +7245,7 @@ bool PlayerbotAI::CanLootSomethingFromWO(WorldObject* wo)
         GameObject* go = GetGameObject(guid);
         if (go)
         {
-            LootItemList lootItemList = {};
+            LootItemPtrList lootItemList = {};
 
             if (go->m_loot)
                 go->m_loot->GetLootItemsListFor(bot, lootItemList);

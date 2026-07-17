@@ -546,8 +546,8 @@ public:
     std::vector<Item*> GetInventoryItems();
     uint32 GetInventoryItemsCountWithId(uint32 itemId);
     bool HasItemInInventory(uint32 itemId);
-    bool HasNotFullStacksInBagsForLootItems(LootItemList &questLootItemList);
-    bool HasQuestItemsInLootList(LootItemList &questLootItemList);
+    bool HasNotFullStacksInBagsForLootItems(LootItemPtrList &questLootItemList);
+    bool HasQuestItemsInLootList(LootItemPtrList &questLootItemList);
     bool HasQuestItemsInWOLootList(WorldObject* wo);
     bool CanLootSomethingFromWO(WorldObject* wo);
     PlayerbotHolder* GetHolder() const;

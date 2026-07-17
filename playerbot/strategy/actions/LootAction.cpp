@@ -329,8 +329,13 @@ bool StoreLootAction::Execute(Event& event)
             continue;
 
         //have no right to loot
+#ifdef VMANGOS
+        if (lootItem->is_blocked || !lootItem->AllowedForPlayer(bot, loot->GetLootTarget()))
+            continue;
+#else
         if (lootItem->isBlocked || lootItem->GetSlotTypeForSharedLoot(bot, loot) == MAX_LOOT_SLOT_TYPE)
             continue;
+#endif
 
         Player* master = ai->GetMaster();
         if (sRandomPlayerbotMgr.IsRandomBot(bot) && master)

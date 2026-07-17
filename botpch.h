@@ -67,6 +67,8 @@
 // itself, so the type argument is dropped here.
 #define BOT_TYPED_PACKET(Type, wp) (wp)
 #define BOT_NULL_PACKET(wp) (wp)
+// cmangos's LootItemList already is the pointer-element shape.
+typedef LootItemList LootItemPtrList;
 #endif
 // <<< VMANGOS
 

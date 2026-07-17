@@ -5,6 +5,9 @@
 
 using namespace ai;
 
+#ifndef VMANGOS
+// Under VMANGOS, LootAccess is vmangos's Loot itself and these methods come
+// from the ENABLE_PLAYERBOTS compat surface in core LootMgr.h.
 std::vector<LootItem*> LootAccess::GetLootContentFor(Player* player) const
 {
 	std::vector<LootItem*> retvec;
@@ -65,6 +68,7 @@ bool LootAccess::IsLootedForAll() const
 	}
 	return true;
 }
+#endif // !VMANGOS
 
 LootTemplateAccess const* DropMapValue::GetLootTemplate(ObjectGuid guid, LootType type)
 {
@@ -417,8 +421,13 @@ bool ShouldLootObject::Calculate()
 	if (!lootAccess)
 		return false;
 
+#ifdef VMANGOS
+	// vmangos Loot doesn't track roll method/checked state; group rolls start
+	// when the loot is first opened, so no pre-open pass is needed here.
+#else
 	if (lootAccess->m_lootMethod != NOT_GROUP_TYPE_LOOT && !lootAccess->m_isChecked) //Open loot once to start rolls.
 		return true;
+#endif
 
 	for (auto& lItem : lootAccess->GetLootContentFor(bot))
 	{
@@ -439,8 +448,13 @@ bool ShouldLootObject::Calculate()
 
 		ItemQualifier ltemQualifier(lItem);
 
+#ifdef VMANGOS
+		if (lootAccess->loot_type != LOOT_SKINNING && !StoreLootAction::IsLootAllowed(ltemQualifier, ai))
+			continue;
+#else
 		if (lootAccess->m_lootType != LOOT_SKINNING && !StoreLootAction::IsLootAllowed(ltemQualifier, ai))
 			continue;
+#endif
 
 		return true;
 	}

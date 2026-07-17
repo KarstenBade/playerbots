@@ -21,6 +21,13 @@ namespace ai
         LootGroups        Groups;                           // groups have own (optimized) processing, grouped entries go there
     };
 
+#ifdef VMANGOS
+    // vmangos's Loot has public members and (under ENABLE_PLAYERBOTS) carries
+    // the cmangos-compat methods the module uses (GetLootContentFor,
+    // IsLootedForAll, GetRollForSlot, ...), so no private-layout mirror is
+    // needed — the reinterpret_casts below become identity casts.
+    typedef Loot LootAccess;
+#else
     class LootAccess
     {
     public:
@@ -59,6 +66,7 @@ namespace ai
         GuidSet          m_playersOpened;                 // players that have released the corpse
         TimePoint        m_createTime;                    // create time (used to refill loot if need)
     };
+#endif
 
     //DropMap[itemId] = {entry}
     typedef std::unordered_multimap<uint32, int32> DropMap;    
