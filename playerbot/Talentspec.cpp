@@ -50,6 +50,15 @@ bool TalentSpec::CheckTalents(uint32 freeTalentPoints, std::ostringstream* out)
         if (entry.rank > entry.maxRank)
         {
             SpellEntry const* spellInfo = sServerFacade.LookupSpellInfo(entry.talentInfo->RankID[0]);
+#ifdef VMANGOS
+            // vmangos spell data comes from the world DB (spell_template);
+            // rank spells can be missing there - never deref unchecked.
+            if (!spellInfo)
+            {
+                *out << "spec is not for this class. Talent " << entry.talentInfo->TalentID << " has " << (entry.rank - entry.maxRank) << " points above max rank.";
+                return false;
+            }
+#endif
             *out << "spec is not for this class. " << spellInfo->SpellName[0] << " has " << (entry.rank - entry.maxRank) << " points above max rank.";
             return false;
         }
@@ -61,7 +70,7 @@ bool TalentSpec::CheckTalents(uint32 freeTalentPoints, std::ostringstream* out)
                 continue;
 
             bool found = false;
-            SpellEntry const* spellInfodep;
+            SpellEntry const* spellInfodep = nullptr;
 
             for (auto& dep : talents)
                 if (dep.talentInfo->TalentID == entry.talentInfo->DependsOn)
@@ -73,6 +82,13 @@ bool TalentSpec::CheckTalents(uint32 freeTalentPoints, std::ostringstream* out)
             if (!found)
             {
                 SpellEntry const* spellInfo = sServerFacade.LookupSpellInfo(entry.talentInfo->RankID[0]);
+#ifdef VMANGOS
+                if (!spellInfo || !spellInfodep)
+                {
+                    *out << "spec is is invalid. Talent:" << entry.talentInfo->TalentID << " needs talent: " << entry.talentInfo->DependsOn << " at rank: " << entry.talentInfo->DependsOnRank;
+                    return false;
+                }
+#endif
                 *out << "spec is is invalid. Talent:" << spellInfo->SpellName[0] << " needs: " << spellInfodep->SpellName[0] << " at rank: " << entry.talentInfo->DependsOnRank;
                 return false;
             }
@@ -89,6 +105,13 @@ bool TalentSpec::CheckTalents(uint32 freeTalentPoints, std::ostringstream* out)
             if (entry.rank > 0 && (int)(entry.talentInfo->Row * 5) > points)
             {
                 SpellEntry const* spellInfo = sServerFacade.LookupSpellInfo(entry.talentInfo->RankID[0]);
+#ifdef VMANGOS
+                if (!spellInfo)
+                {
+                    *out << "spec is is invalid. Talent " << entry.talentInfo->TalentID << " is selected with only " << points << " in row below it.";
+                    return false;
+                }
+#endif
                 *out << "spec is is invalid. Talent " << spellInfo->SpellName[0] << " is selected with only " << points << " in row below it.";
                 return false;
             }
