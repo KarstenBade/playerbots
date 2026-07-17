@@ -57,7 +57,11 @@ bool MonitorNotOnMap::IsConditionMet(const std::string& monitorStr, Player* bot,
     if (!botPos)
         return true;
 
+#ifdef VMANGOS
+    std::string currentMapName = botPos.getMapEntry()->name;
+#else
     std::string currentMapName = botPos.getMapEntry()->name[0];
+#endif
 
     if (currentMapName != wantMapName)
         return true;

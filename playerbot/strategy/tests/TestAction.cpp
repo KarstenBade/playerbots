@@ -269,8 +269,13 @@ TestResult TestAction::ExecuteCommand(const std::string& line, std::string& mess
     }
 
     if (line[0] == '.')
+#ifdef VMANGOS
+        if (ChatHandler(bot).ParseCommands(line.c_str()) == ParseCommandResult::CommandDetectedAndHandled)
+            return TestResult::PASS;
+#else
         if (ChatHandler(bot).ParseCommands(line.c_str()))
             return TestResult::PASS;
+#endif
 
     ExternalEventHelper helper(context);
     if (helper.ParseChatCommand(line, bot))  

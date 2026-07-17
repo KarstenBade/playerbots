@@ -857,7 +857,11 @@ uint32 AhBot::GetAvailableMoney(uint32 auctionHouse)
         result += (now - lastBuyTime) / 3600 / 24 * sAhBotConfig.alwaysAvailableMoney;
     }
 
+#ifdef VMANGOS
+    AuctionHouseObject::AuctionEntryMap const& auctionEntryMap = *sAuctionMgr.GetAuctionsMap(ahEntry)->GetAuctions();
+#else
     AuctionHouseObject::AuctionEntryMap const& auctionEntryMap = sAuctionMgr.GetAuctionsMap(ahEntry)->GetAuctions();
+#endif
     for (AuctionHouseObject::AuctionEntryMap::const_iterator itr = auctionEntryMap.begin(); itr != auctionEntryMap.end(); ++itr)
     {
         AuctionEntry *entry = itr->second;

@@ -47,7 +47,11 @@ bool CompareSpells(std::pair<uint32, std::string>& s1, std::pair<uint32, std::st
 
     if (p1 == p2)
     {
+#ifdef VMANGOS
+        return si1->SpellName[0].compare(si1->SpellName[1]) > 0;
+#else
         return strcmp(si1->SpellName[0], si1->SpellName[1]) > 0;
+#endif
     }
 
     return p1 > p2;
@@ -142,7 +146,11 @@ std::list<std::pair<uint32, std::string> > ListSpellsAction::GetSpellList(std::s
         if (!(ignoreList.find(comp) == std::string::npos && alreadySeenList.find(comp) == std::string::npos))
             continue;
 
+#ifdef VMANGOS
+        if (!filter.empty() && !strstri(pSpellInfo->SpellName[0].c_str(), filter.c_str()))
+#else
         if (!filter.empty() && !strstri(pSpellInfo->SpellName[0], filter.c_str()))
+#endif
             continue;
 
         bool first = true;

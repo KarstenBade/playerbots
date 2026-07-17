@@ -4273,7 +4273,15 @@ void RandomPlayerbotMgr::MirrorAh()
 
     ahMirror.clear();
 
+#ifdef VMANGOS
+    // vmangos keys the auction maps by AuctionHouse.dbc entry.
+    std::vector<AuctionHouseEntry const*> houses;
+    for (uint32 houseId = 1; houseId <= 7; ++houseId)
+        if (AuctionHouseEntry const* houseEntry = sAuctionHouseStore.LookupEntry(houseId))
+            houses.push_back(houseEntry);
+#else
     std::vector<AuctionHouseType> houses = { (AuctionHouseType)0,(AuctionHouseType)1,(AuctionHouseType)2 };
+#endif
 
     //Now loops over all houses. Can probably be faction specific later.
     for (auto house : houses)

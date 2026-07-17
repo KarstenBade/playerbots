@@ -94,10 +94,14 @@ std::list<ObjectGuid> NearestDynamicObjects::Calculate()
     std::list<DynamicObject*> targets;
 
     // Remove this when updating wotlk core
-#ifndef MANGOSBOT_TWO
+#if !defined(MANGOSBOT_TWO) && !defined(VMANGOS)
     AnyDynamicObjectInObjectRangeCheck u_check(bot, range);
     MaNGOS::DynamicObjectListSearcher<AnyDynamicObjectInObjectRangeCheck> searcher(targets, u_check);
     Cell::VisitAllObjects((const WorldObject*)bot, searcher, range);
+#endif
+#ifdef VMANGOS
+    // VMANGOS-TODO: vmangos GridNotifiers have no dynamic-object searcher;
+    // hostile ground effects are not detected here.
 #endif
 
     std::list<ObjectGuid> result;

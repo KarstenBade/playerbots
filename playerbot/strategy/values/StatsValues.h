@@ -239,6 +239,10 @@ namespace ai
     public:
         HonorValue(PlayerbotAI* ai, std::string name = "honor", uint32 checkInterval = 60) : ExperienceValue(ai, name, checkInterval) {}
         virtual bool EqualToLast(uint32 value) override { return value != lastValue; }
-        virtual uint32 Calculate() override { return bot->GetUInt32Value(PLAYER_FIELD_LIFETIME_HONORABLE_KILLS); }        
+#ifdef VMANGOS
+        virtual uint32 Calculate() override { return bot->GetHonorMgr().GetStoredHK(); }
+#else
+        virtual uint32 Calculate() override { return bot->GetUInt32Value(PLAYER_FIELD_LIFETIME_HONORABLE_KILLS); }
+#endif        
     };
 }

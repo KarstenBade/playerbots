@@ -487,7 +487,11 @@ std::string PlayerbotLLMInterface::Generate(const std::string& prompt, int timeO
             ssl_initialized = true;
         }
 
+#ifdef VMANGOS
+        const SSL_METHOD* method = SSLv23_client_method(); // OpenSSL 1.0.x API
+#else
         const SSL_METHOD* method = TLS_client_method();
+#endif
         ctx = SSL_CTX_new(method);
         if (!ctx) {
             if (debug)

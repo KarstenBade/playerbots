@@ -133,7 +133,11 @@ bool UseConsumableAction::IsStatBuffSpell(uint32 spellId) const
             spellInfo->EffectApplyAuraName[j] == SPELL_AURA_MOD_HEALING_DONE ||
             spellInfo->EffectApplyAuraName[j] == SPELL_AURA_MOD_RESISTANCE)
         {
+#ifdef VMANGOS
+            if (!spellInfo->SpellName[0].empty())
+#else
             if (spellInfo->SpellName[0])
+#endif
             {
                 std::string name = spellInfo->SpellName[0];
                 if (name == "Food" || name == "Drink")
@@ -147,7 +151,11 @@ bool UseConsumableAction::IsStatBuffSpell(uint32 spellId) const
             const SpellEntry* triggered = sServerFacade.LookupSpellInfo(spellInfo->EffectTriggerSpell[j]);
             if (triggered)
             {
+#ifdef VMANGOS
+                if (!triggered->SpellName[0].empty())
+#else
                 if (triggered->SpellName[0])
+#endif
                 {
                     std::string tname = triggered->SpellName[0];
                     if (tname == "Food" || tname == "Drink")

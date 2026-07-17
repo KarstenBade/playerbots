@@ -182,7 +182,11 @@ bool PlayerLoginInfo::SendHolder()
     return true;
 }
 
+#ifdef VMANGOS
+void PlayerLoginInfo::HandlePlayerBotLoginCallback(std::unique_ptr<QueryResult> /*dummy*/, SqlQueryHolder* holder)
+#else
 void PlayerLoginInfo::HandlePlayerBotLoginCallback(QueryResult* /*dummy*/, SqlQueryHolder* holder)
+#endif
 {
     if (!holder)
     {

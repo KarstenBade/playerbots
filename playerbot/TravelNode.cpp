@@ -2601,9 +2601,16 @@ void TravelNodeMap::generateTransportNodes()
             else //Boats/Zepelins
             {
                 //Loop over the path and connect stop locations.
+#ifdef VMANGOS
+                for (size_t pIdx = 0; pIdx < path.size(); ++pIdx)
+                {
+                    TaxiPathNodeEntry const* p = &static_cast<TaxiPathNodeEntry const&>(path[pIdx]);
+                    WorldPosition pos = WorldPosition(p->mapid, p->x, p->y, p->z, 0);
+#else
                 for (auto& p : path)
                 {
                     WorldPosition pos = WorldPosition(p->mapid, p->x, p->y, p->z, 0);
+#endif
 
                     if (prevNode)
                     {
@@ -2645,9 +2652,16 @@ void TravelNodeMap::generateTransportNodes()
                 if (prevNode)
                 {
                     //Continue from start until first stop and connect to end.
+#ifdef VMANGOS
+                    for (size_t pIdx = 0; pIdx < path.size(); ++pIdx)
+                    {
+                        TaxiPathNodeEntry const* p = &static_cast<TaxiPathNodeEntry const&>(path[pIdx]);
+                        WorldPosition pos = WorldPosition(p->mapid, p->x, p->y, p->z, 0);
+#else
                     for (auto& p : path)
                     {
                         WorldPosition pos = WorldPosition(p->mapid, p->x, p->y, p->z, 0);
+#endif
 
                         //if (data->displayId == 3015)
                         //    pos.setZ(pos.getZ() + 6.0f);
@@ -3068,11 +3082,25 @@ void TravelNodeMap::generateTaxiPaths()
 
         std::vector<WorldPosition> ppath;
 
+#ifdef VMANGOS
+        {
+            TaxiPathNodeEntry const& first = nodes[0];
+            if (startNode->fDist(WorldPosition(first.mapid, first.x, first.y, first.z, 0.0)) > 0.1f)
+                ppath.push_back(*startNode->getPosition());
+
+            for (size_t nIdx = 0; nIdx < nodes.size(); ++nIdx)
+            {
+                TaxiPathNodeEntry const& n = nodes[nIdx];
+                ppath.push_back(WorldPosition(n.mapid, n.x, n.y, n.z, 0.0));
+            }
+        }
+#else
         if (startNode->fDist(WorldPosition(nodes.front()->mapid, nodes.front()->x, nodes.front()->y, nodes.front()->z, 0.0)) > 0.1f)
             ppath.push_back(*startNode->getPosition());
 
         for (auto& n : nodes)
             ppath.push_back(WorldPosition(n->mapid, n->x, n->y, n->z, 0.0));
+#endif
 
         if (endNode->fDist(ppath.back()) > 0.1f)
             ppath.push_back(*endNode->getPosition());

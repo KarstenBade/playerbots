@@ -1496,7 +1496,11 @@ bool MovementAction::MoveTo(uint32 mapId, float x, float y, float z, bool idle, 
         //Use standard pathfinder to find a route.
         pathfinder.calculate(movePosition.getX(), movePosition.getY(), movePosition.getZ(), false);
         PathType type = pathfinder.getPathType();
+#ifdef VMANGOS
+        PointsArray const& points = pathfinder.getPath();
+#else
         PointsArray& points = pathfinder.getPath();
+#endif
 
         // DEBUG: After VMaps pathfinder - use TellDebug for debug move
         if (ai->HasStrategy("debug move", BotState::BOT_STATE_NON_COMBAT))
@@ -1888,7 +1892,11 @@ bool MovementAction::MoveTo(uint32 mapId, float x, float y, float z, bool idle, 
         PathFinder path(mover);
         path.calculate(movePosition.getX(), movePosition.getY(), movePosition.getZ(), false);
         PathType type = path.getPathType();
+#ifdef VMANGOS
+        PointsArray const& points = path.getPath();
+#else
         PointsArray& points = path.getPath();
+#endif
         movePath.addPath(startPosition.fromPointsArray(points));
         TravelNodePathType pathType;
         uint32 entry;
@@ -2415,7 +2423,11 @@ bool MovementAction::Follow(Unit* target, float distance, float angle)
                     //Use standard pathfinder to find a route.
                     WorldPosition prevPoint = botPos;
                     pathfinder.calculate(moveToPos.getVector3(), tarPos.getVector3());
+#ifdef VMANGOS
+                    Movement::PointsArray const& pathPoints = pathfinder.getPath();
+#else
                     Movement::PointsArray& pathPoints = pathfinder.getPath();
+#endif
                     if (pathPoints.size() >= 2)
                     {
                         for (uint32 i = 1; i < pathPoints.size() - 1; i++)
@@ -4224,7 +4236,11 @@ bool JumpAction::DoJump(const WorldPosition &dest, const WorldPosition& highestP
     ai->InterruptSpell(false);
     ai->StopMoving();
     ai->SetJumpDestination(landing);
+#ifdef VMANGOS
+    bot->SetFallInformation(maxHeight);
+#else
     bot->SetFallInformation(0, maxHeight);
+#endif
 
     bool slowJump = false;// !jumpBackward && hSpeed == bot->GetSpeed(MOVE_WALK);
     // TODO calculate slow jump (jump + move forward)

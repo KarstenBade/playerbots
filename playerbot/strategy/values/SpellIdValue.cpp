@@ -82,7 +82,11 @@ uint32 SpellIdValue::Calculate()
 
         if (ids.empty())
         {
+            #ifdef VMANGOS
+            const char* spellName = pSpellInfo->SpellName[loc].c_str();
+#else
             char* spellName = pSpellInfo->SpellName[loc];
+#endif
             if (!useByItem && (tolower(spellName[0]) != firstSymbol || strlen(spellName) != spellLength || !Utf8FitTo(spellName, wnamepart)))
                 continue;
         }
@@ -114,7 +118,11 @@ uint32 SpellIdValue::Calculate()
 
             if (ids.empty())
             {
-                char* spellName = pSpellInfo->SpellName[loc];
+                #ifdef VMANGOS
+            const char* spellName = pSpellInfo->SpellName[loc].c_str();
+#else
+            char* spellName = pSpellInfo->SpellName[loc];
+#endif
                 if (tolower(spellName[0]) != firstSymbol || strlen(spellName) != spellLength || !Utf8FitTo(spellName, wnamepart))
                     continue;
             }
@@ -204,7 +212,11 @@ uint32 SpellIdValue::Calculate()
         for (std::set<uint32>::reverse_iterator i = spellIds.rbegin(); i != spellIds.rend(); ++i)
         {
             if (!highestSpellId) highestSpellId = *i;
+#ifdef VMANGOS
+            if (sSpellMgr.IsHighRankOfSpell(*i, highestSpellId)) highestSpellId = *i;
+#else
             if (sSpellMgr.IsSpellHigherRankOfSpell(*i, highestSpellId)) highestSpellId = *i;
+#endif
             if (saveMana == rank && !isBuff) return *i;
             lowestSpellId = *i;
             rank++;
@@ -267,7 +279,11 @@ uint32 VehicleSpellIdValue::Calculate()
             if (!pSpellInfo)
                 continue;
 
+            #ifdef VMANGOS
+            const char* spellName = pSpellInfo->SpellName[loc].c_str();
+#else
             char* spellName = pSpellInfo->SpellName[loc];
+#endif
             if (tolower(spellName[0]) != firstSymbol || strlen(spellName) != spellLength || !Utf8FitTo(spellName, wnamepart))
                 continue;
 

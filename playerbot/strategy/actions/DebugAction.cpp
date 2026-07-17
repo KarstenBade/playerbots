@@ -1151,7 +1151,11 @@ void DebugAction::addAura(uint32 spellId, Unit* target)
         {
             int32 basePoints = spellInfo->CalculateSimpleValue(SpellEffectIndex(i));
             int32 damage = 0; // no damage cos caster doesnt exist
+#ifdef VMANGOS
+            Aura* aur = CreateAura(spellInfo, SpellEffectIndex(i), &damage, holder, target);
+#else
             Aura* aur = CreateAura(spellInfo, SpellEffectIndex(i), &damage, &basePoints, holder, target);
+#endif
             holder->AddAura(aur, SpellEffectIndex(i));
         }
     }
@@ -3347,7 +3351,11 @@ bool DebugAction::HandleNPC(Event& event, Player* requester, const std::string& 
     if (guidP.HasNpcFlag(UNIT_NPC_FLAG_REPAIR))
         ai->TellPlayerNoFacing(requester, "UNIT_NPC_FLAG_REPAIR");
 #ifdef MANGOSBOT_ZERO
+#ifdef VMANGOS
+    if (false) // no outdoor-pvp npc flag on vanilla
+#else
     if (guidP.HasNpcFlag(UNIT_NPC_FLAG_OUTDOORPVP))
+#endif
         ai->TellPlayerNoFacing(requester, "UNIT_NPC_FLAG_OUTDOORPVP");
 #endif
 
@@ -5709,7 +5717,11 @@ bool DebugAction::HandleTransanal(Event& event, Player* requester, const std::st
                     delete session;
             }
 
+#ifdef VMANGOS
+            transport->Update(100, 100);
+#else
             transport->Update(100);
+#endif
 
             transport->UpdatePosition(5000, 5000, 0, 0);
         }

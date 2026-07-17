@@ -105,7 +105,11 @@ namespace ai
 		LoginState GetLoginState() const { return loginState; }
 
 		bool SendHolder();
+#ifdef VMANGOS
+		void HandlePlayerBotLoginCallback(std::unique_ptr<QueryResult> /*dummy*/, SqlQueryHolder* holder);
+#else
 		void HandlePlayerBotLoginCallback(QueryResult* /*dummy*/, SqlQueryHolder* holder);
+#endif
 
 		void ResetLoginState();
 		void FillLoginSpace(LoginSpace& space, FillStep step = FillStep::NOW) const;

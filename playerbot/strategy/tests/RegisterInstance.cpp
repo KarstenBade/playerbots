@@ -82,7 +82,11 @@ void TestRegistry::GenerateBossWalkTest()
                 continue;
 
             GuidPosition entry;
+            #ifdef VMANGOS
+            std::string mapName = mapEntry->name;
+#else
             std::string mapName = mapEntry->name[0];
+#endif
 
             if (!ParseLocation(mapName, entry))
             {
@@ -204,7 +208,11 @@ void TestRegistry::GenerateBossEncounterTest()
                 continue;
 
             GuidPosition entry;
+            #ifdef VMANGOS
+            std::string mapName = mapEntry->name;
+#else
             std::string mapName = mapEntry->name[0];
+#endif
 
             if (!ParseLocation(mapName, entry))
             {

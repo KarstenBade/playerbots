@@ -89,7 +89,11 @@ void RpgHelper::resetFacing(GuidPosition guidPosition)
     if (unit->IsMoving())
         return;
 
+#ifdef VMANGOS
+    CreatureData const* data = guidPosition.GetCreatureData();
+#else
     CreatureData* data = guidPosition.GetCreatureData();
+#endif
 
     if (data)
     {
