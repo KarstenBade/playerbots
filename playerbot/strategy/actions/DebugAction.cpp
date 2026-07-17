@@ -1284,10 +1284,12 @@ bool DebugAction::HandleGY(Event& event, Player* requester, const std::string& t
         if (!map)
             continue;
 
+#ifndef VMANGOS // vmangos routes graveyard lookups through sObjectMgr below
         GraveyardManager* gy = &map->GetGraveyardManager();
 
         if (!gy)
             continue;
+#endif
 
         for (uint32 x = 0; x < TOTAL_NUMBER_OF_CELLS_PER_MAP; x++)
         {
@@ -1311,8 +1313,13 @@ bool DebugAction::HandleGY(Event& event, Player* requester, const std::string& t
                 if (areaId != 0)
                 {
                     WorldSafeLocsEntry const* ClosestGrave;
+#ifdef VMANGOS
+                    ClosestGrave = sObjectMgr.GetClosestGraveYard(pos.getX(), pos.getY(), pos.getZ(), mapId, ALLIANCE);
+                    ClosestGrave = sObjectMgr.GetClosestGraveYard(pos.getX(), pos.getY(), pos.getZ(), mapId, HORDE);
+#else
                     ClosestGrave = gy->GetClosestGraveYard(pos.getX(), pos.getY(), pos.getZ(), mapId, ALLIANCE);
                     ClosestGrave = gy->GetClosestGraveYard(pos.getX(), pos.getY(), pos.getZ(), mapId, HORDE);
+#endif
                 }
             }
         }
@@ -1580,11 +1587,13 @@ bool DebugAction::HandleMotion(Event& event, Player* requester, const std::strin
             mm->MoveChase(motionTarget, 5, 0);
         else if (cmd == "fall")
             mm->MoveFall();
+#ifndef VMANGOS // VMANGOS-TODO: no spawn-group formation movement in vmangos
         else if (cmd == "formation")
         {
             FormationSlotDataSPtr form = std::make_shared<FormationSlotData>(0, bot->GetObjectGuid(), nullptr, SpawnGroupFormationSlotType::SPAWN_GROUP_FORMATION_SLOT_TYPE_STATIC);
             mm->MoveInFormation(form);
         }
+#endif
 
         std::string sType = "TODO"; // GetMoveTypeStr(type);
         ai->TellPlayer(requester, "new:" + sType);

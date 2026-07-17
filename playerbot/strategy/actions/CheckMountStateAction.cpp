@@ -302,8 +302,14 @@ bool CheckMountStateAction::isUseful()
         }
     }
 
+#ifdef VMANGOS
+    MapEntry const* botMapEntry = sMapStorage.LookupEntry<MapEntry>(bot->GetMapId());
+    if (botMapEntry && !botMapEntry->IsMountAllowed() && bot->GetMapId() != 531)
+        return false;
+#else
     if (!bot->GetMap()->IsMountAllowed() && bot->GetMapId() != 531)
         return false;
+#endif
 
     if (AI_VALUE(std::vector<MountValue>, "mount list").empty())
         return false;

@@ -34,6 +34,15 @@ GuidPosition GraveyardValue::Calculate()
         }
     }
 
+#ifdef VMANGOS
+    WorldSafeLocsEntry const* ClosestGrave = sObjectMgr.GetClosestGraveYard(
+        refPosition.getX(),
+        refPosition.getY(),
+        refPosition.getZ(),
+        refPosition.getMapId(),
+        bot->GetTeam()
+    );
+#else
     WorldSafeLocsEntry const* ClosestGrave = bot->GetMap()->GetGraveyardManager().GetClosestGraveYard(
         refPosition.getX(),
         refPosition.getY(),
@@ -41,6 +50,7 @@ GuidPosition GraveyardValue::Calculate()
         refPosition.getMapId(),
         bot->GetTeam()
     );
+#endif
 
     if (!ClosestGrave)
     {
@@ -70,7 +80,11 @@ WorldSafeLocsEntry const* GraveyardValue::GetAnotherAppropriateClosestGraveyard(
     uint32 botMapId = corpse->GetMapId();
     uint32 botZoneId = corpse->GetZoneId();
 
+#ifdef VMANGOS
+    for (auto mapValues : sObjectMgr.GetGraveYardMap())
+#else
     for (auto mapValues : sWorld.GetGraveyardManager().GetGraveyardMap())
+#endif
     {
         uint32 locId = mapValues.first;
         GraveYardData const& graveyardData = mapValues.second;

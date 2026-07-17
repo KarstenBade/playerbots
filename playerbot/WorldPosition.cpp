@@ -1093,7 +1093,13 @@ std::vector<WorldPosition> WorldPosition::getPathFromPath(const std::vector<Worl
     if (bot && instanceId == bot->GetInstanceId())
         pathfinder = std::make_unique<PathFinder>(bot);
     else
+#ifdef VMANGOS
+        // VMANGOS-TODO: vmangos PathInfo requires a Unit; without one (travel
+        // node generation, cross-instance queries) no path can be computed.
+        return { };
+#else
         pathfinder = std::make_unique<PathFinder>(getMapId(), instanceId);
+#endif
 
     pathfinder->setAreaCost(NAV_AREA_WATER, 10.0f);
     pathfinder->setAreaCost(12, 5.0f);
@@ -1161,9 +1167,12 @@ bool WorldPosition::ClosestCorrectPoint(float maxRange, float maxHeight, uint32 
     return dtStatusSucceed(dtResult) && polyRef != INVALID_POLYREF;
 }
 
-bool WorldPosition::GetReachableRandomPointOnGround(const Player* bot, const float radius, const bool randomRange) 
+bool WorldPosition::GetReachableRandomPointOnGround(const Player* bot, const float radius, const bool randomRange)
 {
-#ifndef MANGOSBOT_TWO         
+#ifdef VMANGOS
+    // vmangos equivalent (randomRange semantics folded into maxRadius).
+    return getMap(bot ? bot->GetInstanceId() : getFirstInstanceId())->GetWalkRandomPosition(nullptr, coord_x, coord_y, coord_z, radius);
+#elif !defined(MANGOSBOT_TWO)
     return getMap(bot ? bot->GetInstanceId() : getFirstInstanceId())->GetReachableRandomPointOnGround(coord_x, coord_y, coord_z, radius, randomRange);
 #else
     return getMap(bot ? bot->GetInstanceId() : getFirstInstanceId())->GetReachableRandomPointOnGround(bot->GetPhaseMask(), coord_x, coord_y, coord_z, radius, randomRange);

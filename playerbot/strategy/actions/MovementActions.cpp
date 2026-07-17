@@ -3381,7 +3381,11 @@ bool MoveOutOfCollisionAction::Execute(Event& event)
         gy = botPos.getY();
         gz = botPos.getZ();
 #ifndef MANGOSBOT_TWO  
+#ifdef VMANGOS
+        if (bot->GetMap()->GetWalkRandomPosition(nullptr, gx, gy, gz, ai->GetRange("follow")))
+#else
         if (bot->GetMap()->GetReachableRandomPointOnGround(gx, gy, gz, ai->GetRange("follow")))
+#endif
 #else
         if (bot->GetMap()->GetReachableRandomPointOnGround(bot->GetPhaseMask(), gx, gy, gz, ai->GetRange("follow")))
 #endif
@@ -4433,7 +4437,11 @@ WorldPosition JumpAction::GetPossibleJumpStartForInRange(const WorldPosition& sr
         gy = src.getY();
         gz = src.getZ();
 #ifndef MANGOSBOT_TWO  
+#ifdef VMANGOS
+        if (jumper->GetMap()->GetWalkRandomPosition(nullptr, gx, gy, gz, distanceTo))
+#else
         if (jumper->GetMap()->GetReachableRandomPointOnGround(gx, gy, gz, distanceTo))
+#endif
 #else
         if (jumper->GetMap()->GetReachableRandomPointOnGround(bot->GetPhaseMask(), gx, gy, gz, distanceTo))
 #endif

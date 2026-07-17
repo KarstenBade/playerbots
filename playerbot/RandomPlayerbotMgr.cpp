@@ -1806,7 +1806,11 @@ void RandomPlayerbotMgr::CheckLfgQueue()
         bool isLFG = false;
 
 #ifdef MANGOSBOT_ZERO
+#ifdef VMANGOS
+        WorldSafeLocsEntry const* ClosestGrave = sObjectMgr.GetClosestGraveYard(player->GetPositionX(), player->GetPositionY(), player->GetPositionZ(), player->GetMapId(), player->GetTeam());
+#else
         WorldSafeLocsEntry const* ClosestGrave = player->GetMap()->GetGraveyardManager().GetClosestGraveYard(player->GetPositionX(), player->GetPositionY(), player->GetPositionZ(), player->GetMapId(), player->GetTeam());
+#endif
         uint32 zoneId = ClosestGrave ? ClosestGrave->ID : 0;
 
         Group* group = player->GetGroup();
@@ -1919,7 +1923,11 @@ void RandomPlayerbotMgr::CheckLfgQueue()
         if (LfgDungeons[bot->GetTeam()].empty())
             return;
 
+#ifdef VMANGOS
+        WorldSafeLocsEntry const* ClosestGrave = sObjectMgr.GetClosestGraveYard(bot->GetPositionX(), bot->GetPositionY(), bot->GetPositionZ(), bot->GetMapId(), bot->GetTeam());
+#else
         WorldSafeLocsEntry const* ClosestGrave = bot->GetMap()->GetGraveyardManager().GetClosestGraveYard(bot->GetPositionX(), bot->GetPositionY(), bot->GetPositionZ(), bot->GetMapId(), bot->GetTeam());
+#endif
         uint32 zoneId = ClosestGrave ? ClosestGrave->ID : 0;
 
         Group* group = bot->GetGroup();
@@ -2457,11 +2465,21 @@ void RandomPlayerbotMgr::RandomTeleport(Player* bot, std::vector<WorldLocation> 
         {
             uint32 mapId = l.getMapId();
             Map* tMap = sMapMgr.FindMap(mapId, 0);
+#ifdef VMANGOS
+            // VMANGOS-TODO: vmangos doesn't track per-zone activity; approximate
+            // with "any players on the map" (zone granularity lost).
+            if (tMap && tMap->IsContinent() && tMap->GetPlayers().getSize() > 0)
+            {
+                uint32 zoneId = sTerrainMgr.GetZoneId(mapId, l.coord_x, l.coord_y, l.coord_z);
+                if (zoneId)
+                {
+#else
             if (tMap && tMap->IsContinent() && tMap->HasActiveZones())
             {
                 uint32 zoneId = sTerrainMgr.GetZoneId(mapId, l.coord_x, l.coord_y, l.coord_z);
                 if (tMap->HasActiveZone(zoneId))
                 {
+#endif
                     if (sPlayerbotAIConfig.randomBotTeleportNearPlayerMaxAmount > 0 && sPlayerbotAIConfig.randomBotTeleportNearPlayerMaxAmountRadius > 0.0f)
                     {
                         uint32 botsNearTeleportPoint = 0;
