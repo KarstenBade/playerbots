@@ -1157,6 +1157,11 @@ int32 TravelMgr::GetAreaLevel(uint32 area_id)
         if (!subArea || subArea->zone != area->ID)
             continue;
 
+        // Guard against self-referencing areas (zone == own id, seen in
+        // custom world data): would recurse forever below.
+        if (subArea->ID == area->ID)
+            continue;
+
         int32 subLevel = GetAreaLevel(subArea->ID);
 
         if (!subLevel)
@@ -1218,7 +1223,7 @@ int32 TravelMgr::GetAreaLevel(uint32 area_id)
     }
 
     //Use parent zone value.
-    if (area->zone)
+    if (area->zone && area->zone != area_id)
     {
         areaLevels[area_id] = 0; //Set a temporary value so it wont be counted.
         level = GetAreaLevel(area->zone);

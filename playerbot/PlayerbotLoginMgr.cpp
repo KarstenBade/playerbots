@@ -414,7 +414,11 @@ BotPool PlayerBotLoginMgr::LoadBotsFromDb()
 
     sLog.outDebug("PlayerbotLoginMgr: %d accounts found.", uint32(accounts.size()));
 
+#ifdef VMANGOS
+    result = CharacterDatabase.PQuery("SELECT account, guid, race, class, level, online, played_time_total, map, position_x, position_y, position_z, orientation, (SELECT guild_id FROM guild_member m WHERE m.guid = c.guid) guildId FROM characters c");
+#else
     result = CharacterDatabase.PQuery("SELECT account, guid, race, class, level, online, totaltime, map, position_x, position_y, position_z, orientation, (SELECT guildid FROM guild_member m WHERE m.guid = c.guid) guildId FROM characters c");
+#endif
          
     if (!result)
     {

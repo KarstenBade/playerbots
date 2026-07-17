@@ -1236,7 +1236,11 @@ uint32 RandomPlayerbotMgr::AddRandomBots()
 
                 if (noCriteria == 2)
                 {
+#ifdef VMANGOS
+                    result = CharacterDatabase.PQuery("SELECT guid, level, played_time_total, race, class FROM characters WHERE account = '%u'", accountId);
+#else
                     result = CharacterDatabase.PQuery("SELECT guid, level, totaltime, race, class FROM characters WHERE account = '%u'", accountId);
+#endif
                 }
                 else
                 {
@@ -1245,8 +1249,13 @@ uint32 RandomPlayerbotMgr::AddRandomBots()
                     bool rndCanIncrease = !sPlayerbotAIConfig.disableRandomLevels && randomAvgLevel > currentAvgLevel;
                     bool rndCanLower = !sPlayerbotAIConfig.disableRandomLevels && randomAvgLevel < currentAvgLevel;
 
+#ifdef VMANGOS
+                    std::string query = "SELECT guid, level, played_time_total, race, class FROM characters WHERE account = '%u' AND level <= %u";
+                    std::string wasRand = sPlayerbotAIConfig.instantRandomize ? "played_time_total" : "(level > 1)";
+#else
                     std::string query = "SELECT guid, level, totaltime, race, class FROM characters WHERE account = '%u' AND level <= %u";
                     std::string wasRand = sPlayerbotAIConfig.instantRandomize ? "totaltime" : "(level > 1)";
+#endif
 
                     if (needToIncrease) //We need more higher level bots.
                     {
@@ -2816,11 +2825,22 @@ void RandomPlayerbotMgr::PrepareTeleportCache()
         BarGoLink bar(maxLevel);
         for (uint8 level = 1; level <= maxLevel; level++)
         {
+#ifdef VMANGOS
+            // vmangos creature_template columns; the cmangos extraFlags/
+            // unitFlags exclusions (guards, triggers) have no direct
+            // equivalent here. VMANGOS-TODO: filter via static_flags.
+            auto results = WorldDatabase.PQuery("SELECT `map`, `position_x`, `position_y`, `position_z` "
+                "FROM (SELECT `map`, `position_x`, `position_y`, `position_z`, t.level_max, t.level_min, "
+                "%u - (t.level_max + t.level_min) / 2 delta "
+                "FROM creature c INNER JOIN creature_template t ON c.id = t.entry WHERE t.type != 8 AND t.npc_flags = 0 AND t.rank = 0 AND t.loot_id != 0) q "
+                "WHERE delta >= 0 AND delta <= %u AND map in (%s)",
+#else
             auto results = WorldDatabase.PQuery("SELECT `map`, `position_x`, `position_y`, `position_z` "
                 "FROM (SELECT `map`, `position_x`, `position_y`, `position_z`, t.maxlevel, t.minlevel, "
                 "%u - (t.maxlevel + t.minlevel) / 2 delta "
                 "FROM creature c INNER JOIN creature_template t ON c.id = t.entry WHERE t.CreatureType != 8 AND t.NpcFlags = 0 AND t.Rank = 0 AND NOT (t.extraFlags & 1024 OR t.extraFlags & 65536 OR t.extraflags & 64 OR t.unitFlags & 256 OR t.unitFlags & 512) AND t.lootid != 0) q "
                 "WHERE delta >= 0 AND delta <= %u AND map in (%s)",
+#endif
                 level,
                 sPlayerbotAIConfig.randomBotTeleLevel,
                 sPlayerbotAIConfig.randomBotMapsAsString.c_str()
@@ -3226,9 +3246,15 @@ uint32 RandomPlayerbotMgr::GetZoneLevel(uint16 mapId, float teleX, float teleY, 
 	uint32 maxLevel = sWorld.getConfig(CONFIG_UINT32_MAX_PLAYER_LEVEL);
 
 	uint32 level;
+#ifdef VMANGOS
+    auto results = WorldDatabase.PQuery("SELECT AVG(t.level_min) minlevel, AVG(t.level_max) maxlevel FROM creature c "
+            "INNER JOIN creature_template t ON c.id = t.entry "
+            "WHERE map = '%u' AND level_min > 1 AND abs(position_x - '%f') < '%u' AND abs(position_y - '%f') < '%u'",
+#else
     auto results = WorldDatabase.PQuery("SELECT AVG(t.minlevel) minlevel, AVG(t.maxlevel) maxlevel FROM creature c "
             "INNER JOIN creature_template t ON c.id = t.entry "
             "WHERE map = '%u' AND minlevel > 1 AND abs(position_x - '%f') < '%u' AND abs(position_y - '%f') < '%u'",
+#endif
             mapId, teleX, sPlayerbotAIConfig.randomBotTeleportDistance / 2, teleY, sPlayerbotAIConfig.randomBotTeleportDistance / 2);
 
     if (results)
@@ -3370,12 +3396,22 @@ uint32 RandomPlayerbotMgr::GetEventValue(uint32 bot, std::string event)
             do
             {
                 Field* fields = results->Fetch();
+#ifdef VMANGOS
+                // event/data are nullable; GetString() returns nullptr for
+                // SQL NULL and assigning that to std::string crashes.
+                std::string eventName = fields[0].GetCppString();
+#else
                 std::string eventName = fields[0].GetString();
+#endif
                 CachedEvent e;
                 e.value = fields[1].GetUInt32();
                 e.lastChangeTime = fields[2].GetUInt32();
                 e.validIn = fields[3].GetUInt32();
+#ifdef VMANGOS
+                e.data = fields[4].GetCppString();
+#else
                 e.data = fields[4].GetString();
+#endif
                 eventCache[bot][eventName] = e;
             } while (results->NextRow());
         }

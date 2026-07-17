@@ -732,7 +732,11 @@ std::list<std::string> PlayerbotHolder::HandlePlayerbotCommand(const std::string
             return messages;
         }
 
+#ifdef VMANGOS
+        auto result = CharacterDatabase.PQuery("SELECT m.guid, (select name from characters c where c.guid = m.guid) FROM guild_member m WHERE guild_id = '%u'", master->GetGuildId());
+#else
         auto result = CharacterDatabase.PQuery("SELECT m.guid, (select name from characters c where c.guid = m.guid) FROM guild_member m WHERE guildid = '%u'", master->GetGuildId());
+#endif
 
         if (!result)
         {
@@ -3012,5 +3016,60 @@ void PlayerbotHolder::HandlePlayerBotLoginCallback(std::unique_ptr<QueryResult> 
     // calls ResetStrategies() on them, because this callback runs on a DB
     // worker thread and would corrupt engine data accessed by the map thread.
     sRandomPlayerbotMgr.OnBotLoginRegistration(bot);
+}
+
+// --- Core -> module call bridge ------------------------------------------
+// Declared in src/game/PlayerbotsBridge.h; core TUs must not include module
+// headers, so the world/session hooks call through these.
+#include "PlayerbotsBridge.h"
+
+namespace PlayerbotsBridge
+{
+    bool IsEnabled()
+    {
+        return sPlayerbotAIConfig.enabled;
+    }
+
+    void Initialize()
+    {
+        sPlayerbotAIConfig.Initialize();
+    }
+
+    void UpdateAI(uint32 diff)
+    {
+        sRandomPlayerbotMgr.UpdateAI(diff);
+    }
+
+    void UpdateSessions(uint32 diff)
+    {
+        sRandomPlayerbotMgr.UpdateSessions(diff);
+    }
+
+    void OnMasterLogin(Player* player)
+    {
+        if (!player->GetPlayerbotMgr())
+            player->CreatePlayerbotMgr();
+        player->GetPlayerbotMgr()->OnPlayerLogin(player);
+        sRandomPlayerbotMgr.OnPlayerLogin(player);
+    }
+
+    void OnPlayerLogout(Player* player)
+    {
+        sRandomPlayerbotMgr.OnPlayerLogout(player);
+    }
+
+    void OnOutgoingPacket(Player* player, WorldPacket const& packet)
+    {
+        if (player->GetPlayerbotAI())
+            player->GetPlayerbotAI()->HandleBotOutgoingPacket(packet);
+        else if (player->GetPlayerbotMgr())
+            player->GetPlayerbotMgr()->HandleMasterOutgoingPacket(packet);
+    }
+
+    void UpdateMasterBotSessions(Player* player)
+    {
+        if (player->GetPlayerbotMgr())
+            player->GetPlayerbotMgr()->UpdateSessions(0);
+    }
 }
 #endif

@@ -419,6 +419,14 @@ bool RandomPlayerbotFactory::CreateRandomBot(uint8 cls, uint8 inputRace)
         return false;
     }
 
+#ifdef VMANGOS
+    // vmangos's Player::Create flags the character as a temporary battle bot
+    // (m_saveDisabled = true); ours must persist.
+    player->SetSaveDisabled(false);
+    // vmangos resolves guid->account through the player-data cache (loaded at
+    // startup); register the new character or AddPlayerBot cannot find it.
+    sObjectMgr.InsertPlayerInCache(player);
+#endif
     player->setCinematic(2);
     player->SetAtLoginFlag(AT_LOGIN_NONE);
     //player->SetSemaphoreTeleportFar(true); //Fake teleport to delay sql save
@@ -1187,9 +1195,15 @@ std::string RandomPlayerbotFactory::CreateRandomGuildName()
     uint32 maxId = fields[0].GetUInt32();
 
     uint32 id = urand(0, maxId);
+#ifdef VMANGOS
+    result = CharacterDatabase.PQuery("SELECT n.name FROM ai_playerbot_guild_names n "
+            "LEFT OUTER JOIN guild e ON e.name = n.name "
+            "WHERE e.guild_id IS NULL AND n.name_id >= '%u' LIMIT 1", id);
+#else
     result = CharacterDatabase.PQuery("SELECT n.name FROM ai_playerbot_guild_names n "
             "LEFT OUTER JOIN guild e ON e.name = n.name "
             "WHERE e.guildid IS NULL AND n.name_id >= '%u' LIMIT 1", id);
+#endif
     if (!result)
     {
         sLog.outError("No more names left for random guilds");

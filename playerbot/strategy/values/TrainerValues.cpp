@@ -105,6 +105,11 @@ trainableSpellMap* TrainableSpellMapValue::Calculate()
                     SpellEntry const* spell = sSpellTemplate.LookupEntry<SpellEntry>(trainerSpell.learnedSpell[0]);
 #endif
 
+#ifdef VMANGOS
+                    // Defensive: never trust learnedSpell to resolve.
+                    if (!spell)
+                        continue;
+#endif
                     spellRequirement = spell->EffectMiscValue[1];
                 }
             }

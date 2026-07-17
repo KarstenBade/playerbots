@@ -3515,7 +3515,11 @@ void RandomItemMgr::BuildAmmoCache()
         for (uint32 subClass = ITEM_SUBCLASS_ARROW; subClass <= ITEM_SUBCLASS_BULLET; subClass++)
         {
             auto results = WorldDatabase.PQuery(
+                    #ifdef VMANGOS
+                    "select entry, required_level from item_template where class = '%u' and subclass = '%u' and required_level <= '%u' and quality = '%u' order by required_level desc",
+#else
                     "select entry, RequiredLevel from item_template where class = '%u' and subclass = '%u' and RequiredLevel <= '%u' and quality = '%u' order by RequiredLevel desc",
+#endif
                     ITEM_CLASS_PROJECTILE, subClass, level, ITEM_QUALITY_NORMAL);
             if (!results)
                 return;
@@ -3530,7 +3534,11 @@ void RandomItemMgr::BuildAmmoCache()
         }
 
         auto results = WorldDatabase.PQuery(
-            "select entry, RequiredLevel from item_template where class = '%u' and subclass = '%u' and RequiredLevel <= '%u' and quality = '%u' order by RequiredLevel desc",
+            #ifdef VMANGOS
+                    "select entry, required_level from item_template where class = '%u' and subclass = '%u' and required_level <= '%u' and quality = '%u' order by required_level desc",
+#else
+                    "select entry, RequiredLevel from item_template where class = '%u' and subclass = '%u' and RequiredLevel <= '%u' and quality = '%u' order by RequiredLevel desc",
+#endif
             ITEM_CLASS_WEAPON, ITEM_SUBCLASS_WEAPON_THROWN, level, ITEM_QUALITY_NORMAL);
         if (!results)
             return;

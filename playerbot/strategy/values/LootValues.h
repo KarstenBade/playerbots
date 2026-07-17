@@ -11,6 +11,12 @@ namespace ai
     public:
         LootStoreItemList ExplicitlyChanced;                // Entries with chances defined in DB
         LootStoreItemList EqualChanced;                     // Zero chances - every entry takes the same chance
+#ifdef VMANGOS
+        // vmangos's LootTemplate::LootGroup carries this flag after the two
+        // lists; without it the Groups vector stride is wrong when
+        // reinterpret_casting the real template onto this mirror.
+        bool hasConditionalEqualChancedItem = false;
+#endif
     };
 
     class LootTemplateAccess
