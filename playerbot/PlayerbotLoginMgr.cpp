@@ -177,7 +177,8 @@ bool PlayerLoginInfo::SendHolder()
         return false;
     }
 
-    CharacterDatabase.DelayQueryHolder(this, &PlayerLoginInfo::HandlePlayerBotLoginCallback, holder);
+    // Main-thread callback (see PlayerbotMgr.cpp AddPlayerBot for rationale).
+    CharacterDatabase.DelayQueryHolderUnsafe(this, &PlayerLoginInfo::HandlePlayerBotLoginCallback, holder);
 
     return true;
 }

@@ -2970,7 +2970,11 @@ void PlayerbotHolder::AddPlayerBot(uint32 playerGuid, uint32 masterAccountId)
         return;
     }
 
-    CharacterDatabase.DelayQueryHolder(this, &PlayerbotHolder::HandlePlayerBotLoginCallback, holder);
+    // Unsafe variant = callback runs serialized on the MAIN thread (vmangos
+    // naming is inverted: plain DelayQueryHolder dispatches to a callback
+    // thread pool). Player creation / world add / manager bookkeeping must
+    // run on the main thread like real logins (CharacterHandler.cpp).
+    CharacterDatabase.DelayQueryHolderUnsafe(this, &PlayerbotHolder::HandlePlayerBotLoginCallback, holder);
 }
 
 void PlayerbotHolder::HandlePlayerBotLoginCallback(std::unique_ptr<QueryResult> /*dummy*/, SqlQueryHolder* holder)
@@ -3011,10 +3015,10 @@ void PlayerbotHolder::HandlePlayerBotLoginCallback(std::unique_ptr<QueryResult> 
     OnBotLogin(bot);
 
     // Register the bot with RandomPlayerbotMgr after OnBotLogin has set up
-    // PlayerbotAI. We only do the bookkeeping part here (IsFreeBot/players map).
-    // We must NOT call the full OnPlayerLogin which iterates existing bots and
-    // calls ResetStrategies() on them, because this callback runs on a DB
-    // worker thread and would corrupt engine data accessed by the map thread.
+    // PlayerbotAI. Since the switch to DelayQueryHolderUnsafe this callback
+    // runs serialized on the main thread (like real player logins), so the
+    // bookkeeping is race-free. Kept minimal (no full OnPlayerLogin with its
+    // ResetStrategies sweep) to avoid perturbing other bots mid-update.
     sRandomPlayerbotMgr.OnBotLoginRegistration(bot);
 }
 
