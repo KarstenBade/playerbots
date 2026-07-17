@@ -1153,12 +1153,15 @@ bool TravelPath::UpcommingSpecialMovement(WorldPosition startPos, float maxDist,
 
 void TravelPath::ClipPath(PlayerbotAI* ai, Unit* mover, bool ignoreEnemyTargets)
 {
+    // Check for end() before dereferencing, and don't touch startP after
+    // cutTo(): the erase invalidates it (MSVC debug iterators fastfail on
+    // the stale comparison).
     auto startP = getNextPoint(mover, 0.0f, false);
-
-    cutTo(*startP, false);
 
     if (startP == fullPath.end())
         return;
+
+    cutTo(*startP, false);
 
     AiObjectContext* context = ai->GetAiObjectContext();
     std::list<ObjectGuid> targets;
