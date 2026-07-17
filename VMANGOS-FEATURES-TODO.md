@@ -154,3 +154,55 @@ see git log). Then the mangosd link:
 | Gossip text / locale-string fillers | compat GossipText + no-op fillers | unchanged from session 2 |
 | HTTPS LLM endpoints (Windows) | PlayerbotLLMInterface.cpp `VMANGOS_NO_LIBSSL` | no libssl in vmangos Windows deps; HTTP works |
 | Full OnPlayerLogin on bot login | RandomPlayerbotMgr::OnBotLoginRegistration | strategy reset of other bots skipped (thread safety) |
+
+## Session 6 (2026-07-18): missing core hooks found + criticality triage
+
+Runtime symptom: bot stood still in Northshire and ignored group invites.
+Root cause was NOT a stubbed feature — two core hooks were never wired:
+
+1. **Per-bot AI tick** — nothing called `PlayerbotAI::UpdateAI()`. The
+   bridge only ticked the managers (`sRandomPlayerbotMgr.UpdateAI` /
+   `UpdateSessions`), and bot sessions are deliberately not in
+   `World::m_sessions`. FIXED: `PlayerbotsBridge::OnPlayerUpdate` called
+   from the end of `Player::Update` (mirrors the reference fork's
+   Player.cpp hook); ticks `m_playerbotAI` and `m_playerbotMgr`.
+2. **Chat forwarding** — say/yell/whisper/party/raid never reached the
+   bot command handlers. FIXED: `PlayerbotsBridge::OnChatMessage` hooks
+   in core `ChatHandler.cpp` (whisper-to-bot consumes the message and
+   skips normal delivery; raid warning fans out to bot group members).
+
+Note: `PlayerbotMgr::HandleMasterIncomingPacket` is intentionally NOT
+wired in core — the reference fork doesn't wire it either; it is only
+re-dispatched module-internally (ShareQuestAction).
+
+`sFactionStore` discrepancy resolved: it IS real (VmangosBotCompat.h
+wraps `sObjectMgr.GetFactionEntry`); stale stub comment in
+RandomPlayerbotMgr.cpp corrected.
+
+### Stubbed-feature ledger by criticality (for autonomous random bots)
+
+**HIGH (gameplay-visible, next up):**
+- `Player::learnClassLevelSpells` no-op (core Player.h) — bot spellbooks
+  may be incomplete after creation/levelup.
+- Ground-AoE hazard detection missing (NearestGameObjects.cpp ~103, no
+  DynamicObject grid searcher in vmangos) — bots stand in fire.
+- Chase introspection (`ServerFacade::GetChaseTarget/Angle/Offset` →
+  nullptr/0) — combat positioning may glitch.
+- Random bots not leveling past 1 (RandomBotMinLevel ineffective) —
+  re-test now that the AI tick runs.
+
+**MEDIUM:**
+- `MotionMaster::MovePath` collapses to final-point MovePoint.
+- `WorldPosition::getPathFromPath` unit-less pathfind returns empty.
+- Taxi-follow disabled (MovementActions.cpp ~2389, GoAction.cpp ~180).
+- Zone-granular teleport activity → map-granular (RandomPlayerbotMgr).
+- Reagent-free-cast check forced (PlayerbotAI.cpp ~5706); Unit approx:
+  CanAttackOnSight / IsFacingTargetsBack / GetCollisionWidth.
+
+**LOW / feature-scoped:**
+- AhBot won-auction settlement no-op; guild-share AH buyout skipped.
+- HTTPS LLM on Windows (HTTP works).
+- MoveFall/PauseWaypoints/DistanceYourself/formation; area-avoidance.
+- DND/AFK auto-reply, emote sounds, LFG meeting stones, instance-count
+  gating, WorldSafeLocs orientation, skill race/class gating, misc
+  Player.h safe defaults (isHonorOrXPTarget→true etc.).

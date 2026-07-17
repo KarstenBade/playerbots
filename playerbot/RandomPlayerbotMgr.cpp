@@ -1452,8 +1452,8 @@ void RandomPlayerbotMgr::LoadBattleMastersCache()
 #endif
 #endif
 #ifdef VMANGOS
-        // VMANGOS-TODO: vmangos never loads Faction.dbc; sFactionStore is a stub
-        // returning nullptr, so team is always TEAM_BOTH_ALLOWED here.
+        // sFactionStore is real under vmangos (SQL-backed via sObjectMgr.GetFactionEntry);
+        // null check kept because SQL rows may be sparse.
         FactionEntry const* bmParentFaction = sFactionStore.LookupEntry(bmFactionId);
         uint32 bmParentTeam = bmParentFaction ? bmParentFaction->team : 0;
 #else

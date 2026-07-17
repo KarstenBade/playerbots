@@ -3071,5 +3071,61 @@ namespace PlayerbotsBridge
         if (player->GetPlayerbotMgr())
             player->GetPlayerbotMgr()->UpdateSessions(0);
     }
+
+    void OnPlayerUpdate(Player* player, uint32 diff)
+    {
+        if (player->GetPlayerbotAI())
+            player->GetPlayerbotAI()->UpdateAI(diff);
+        if (player->GetPlayerbotMgr())
+            player->GetPlayerbotMgr()->UpdateAI(diff);
+    }
+
+    bool OnChatMessage(uint32 type, uint32 lang, std::string const& msg, Player* sender, Player* whisperTarget)
+    {
+        switch (type)
+        {
+            case CHAT_MSG_WHISPER:
+            {
+                if (whisperTarget && whisperTarget->GetPlayerbotAI())
+                {
+                    whisperTarget->GetPlayerbotAI()->HandleCommand(CHAT_MSG_WHISPER, msg, *sender, lang);
+                    return true;
+                }
+                return false;
+            }
+            case CHAT_MSG_SAY:
+            case CHAT_MSG_YELL:
+            {
+                sRandomPlayerbotMgr.HandleCommand(type, msg, *sender, "", sender->GetTeam(), lang);
+                if (sender->GetPlayerbotMgr())
+                    sender->GetPlayerbotMgr()->HandleCommand(type, msg, lang);
+                return false;
+            }
+            case CHAT_MSG_PARTY:
+            case CHAT_MSG_RAID:
+            case CHAT_MSG_RAID_LEADER:
+            {
+                sRandomPlayerbotMgr.HandleCommand(type, msg, *sender, "", TEAM_NONE, lang);
+                if (sender->GetPlayerbotMgr())
+                    sender->GetPlayerbotMgr()->HandleCommand(type, msg, lang);
+                return false;
+            }
+            case CHAT_MSG_RAID_WARNING:
+            {
+                if (Group* group = sender->GetGroup())
+                {
+                    for (GroupReference* itr = group->GetFirstMember(); itr != nullptr; itr = itr->next())
+                    {
+                        Player* member = itr->getSource();
+                        if (member && member->GetPlayerbotAI() && member->IsInSameRaidWith(sender))
+                            member->GetPlayerbotAI()->HandleCommand(CHAT_MSG_RAID, msg, *sender, lang);
+                    }
+                }
+                return false;
+            }
+            default:
+                return false;
+        }
+    }
 }
 #endif
