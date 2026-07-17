@@ -410,7 +410,7 @@ bool SetPetAction::Execute(Event& event)
             packet << petGuid;
             packet << data;
             packet << uint64(0);
-            bot->GetSession()->HandlePetAction(packet);
+            bot->GetSession()->HandlePetAction(BOT_TYPED_PACKET(WorldPackets::Pet::PetAction, packet));
             bot->PetSpellInitialize();
 
             ai->TellPlayer(requester, "Setting pet to aggressive mode");
@@ -428,7 +428,7 @@ bool SetPetAction::Execute(Event& event)
             packet << petGuid;
             packet << data;
             packet << uint64(0);
-            bot->GetSession()->HandlePetAction(packet);
+            bot->GetSession()->HandlePetAction(BOT_TYPED_PACKET(WorldPackets::Pet::PetAction, packet));
             bot->PetSpellInitialize();
 
             ai->TellPlayer(requester, "Setting pet to defensive mode");
@@ -446,7 +446,7 @@ bool SetPetAction::Execute(Event& event)
             packet << petGuid;
             packet << data;
             packet << uint64(0);
-            bot->GetSession()->HandlePetAction(packet);
+            bot->GetSession()->HandlePetAction(BOT_TYPED_PACKET(WorldPackets::Pet::PetAction, packet));
             bot->PetSpellInitialize();
 
             ai->TellPlayer(requester, "Setting pet to passive mode");
@@ -465,7 +465,7 @@ bool SetPetAction::Execute(Event& event)
             data << petGuid;
             data << command;
             data << targetGuid;
-            bot->GetSession()->HandlePetAction(data);
+            bot->GetSession()->HandlePetAction(BOT_TYPED_PACKET(WorldPackets::Pet::PetAction, data));
 
             ai->TellPlayer(requester, "Setting pet to follow me");
             return true;
@@ -483,7 +483,7 @@ bool SetPetAction::Execute(Event& event)
             data << petGuid;
             data << command;
             data << targetGuid;
-            bot->GetSession()->HandlePetAction(data);
+            bot->GetSession()->HandlePetAction(BOT_TYPED_PACKET(WorldPackets::Pet::PetAction, data));
 
             ai->TellPlayer(requester, "Setting pet to stay in place");
             return true;
@@ -513,7 +513,7 @@ bool SetPetAction::Execute(Event& event)
                 data << petGuid;
                 data << command;
                 data << targetGuid;
-                bot->GetSession()->HandlePetAction(data);
+                bot->GetSession()->HandlePetAction(BOT_TYPED_PACKET(WorldPackets::Pet::PetAction, data));
 
                 ai->TellPlayer(requester, "Sending pet to attack");
                 return true;
@@ -552,7 +552,7 @@ bool SetPetAction::Execute(Event& event)
                 data << petGuid;
                 data << command;
                 data << targetGuid;
-                bot->GetSession()->HandlePetAction(data);
+                bot->GetSession()->HandlePetAction(BOT_TYPED_PACKET(WorldPackets::Pet::PetAction, data));
 
                 ai->ChangeStrategy("+pet", BotState::BOT_STATE_COMBAT);
                 ai->ChangeStrategy("+pet", BotState::BOT_STATE_NON_COMBAT);
@@ -577,7 +577,7 @@ bool SetPetAction::Execute(Event& event)
                 WorldPacket packet(CMSG_PET_ABANDON);
                 packet << petGuid;
 
-                bot->GetSession()->HandlePetAbandon(packet);
+                bot->GetSession()->HandlePetAbandon(BOT_TYPED_PACKET(WorldPackets::Pet::PetAbandon, packet));
 
                 return true;
             }

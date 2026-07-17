@@ -29,7 +29,7 @@ namespace ai
         uint32 roles_mask = 0;
         p << player->GetName();
         p << roles_mask;
-        inviter->GetSession()->HandleGroupInviteOpcode(p);
+        inviter->GetSession()->HandleGroupInviteOpcode(BOT_TYPED_PACKET(WorldPackets::Group::GroupInvite, p));
 
         return true;
     }

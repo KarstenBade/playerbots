@@ -37,7 +37,7 @@ namespace ai
 
             WorldPacket packet(CMSG_REPOP_REQUEST);
             packet << uint8(0);
-            bot->GetSession()->HandleRepopRequestOpcode(packet);
+            bot->GetSession()->HandleRepopRequestOpcode(BOT_NULL_PACKET(packet));
 
             // add waiting for ress aura
             if (bot->InBattleGround() && !ai->HasAura(2584, bot))
@@ -61,7 +61,7 @@ namespace ai
 
             WorldPacket packet(CMSG_REPOP_REQUEST);
             packet << uint8(0);
-            bot->GetSession()->HandleRepopRequestOpcode(packet);
+            bot->GetSession()->HandleRepopRequestOpcode(BOT_NULL_PACKET(packet));
 
             // add waiting for ress aura
             if (bot->InBattleGround() && !ai->HasAura(2584, bot))
@@ -207,7 +207,7 @@ namespace ai
         bool Execute(Event& event) override
         {
             WorldPacket packet(CMSG_SELF_RES);
-            bot->GetSession()->HandleSelfResOpcode(packet);
+            bot->GetSession()->HandleSelfResOpcode(BOT_NULL_PACKET(packet));
             return true;
         }
 

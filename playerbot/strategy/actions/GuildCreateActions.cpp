@@ -64,7 +64,7 @@ bool BuyPetitionAction::Execute(Event& event)
         data << uint32(0); // index
         data << uint32(0);
 
-        bot->GetSession()->HandlePetitionBuyOpcode(data);
+        bot->GetSession()->HandlePetitionBuyOpcode(BOT_TYPED_PACKET(WorldPackets::Petition::PetitionBuy, data));
 
         return true;
     }
@@ -155,7 +155,7 @@ bool PetitionOfferAction::Execute(Event& event)
         return false;
     }
 
-    bot->GetSession()->HandleOfferPetitionOpcode(data);
+    bot->GetSession()->HandleOfferPetitionOpcode(BOT_TYPED_PACKET(WorldPackets::Petition::OfferPetition, data));
 
     result = CharacterDatabase.PQuery("SELECT playerguid FROM petition_sign WHERE petitionguid = '%u'", petitions.front()->GetObjectGuid().GetCounter());
     uint8 signs = result ? (uint8)result->GetRowCount() : 0;
@@ -248,7 +248,7 @@ bool PetitionTurnInAction::Execute(Event& event)
 
         data << petition->GetObjectGuid();
 
-        bot->GetSession()->HandleTurnInPetitionOpcode(data);
+        bot->GetSession()->HandleTurnInPetitionOpcode(BOT_TYPED_PACKET(WorldPackets::Petition::TurnInPetition, data));
 
         if (bot->GetGuildId())
         {

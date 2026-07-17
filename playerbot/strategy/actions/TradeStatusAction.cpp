@@ -34,7 +34,7 @@ bool TradeStatusAction::Execute(Event& event)
         WorldPacket p;
         uint32 status = 0;
         p << status;
-        bot->GetSession()->HandleCancelTradeOpcode(p);
+        bot->GetSession()->HandleCancelTradeOpcode(BOT_NULL_PACKET(p));
         return false;
     }
 
@@ -66,7 +66,7 @@ bool TradeStatusAction::Execute(Event& event)
                     takenItemIds[item->GetProto()->ItemId] += item->GetCount();
             }
 
-            bot->GetSession()->HandleAcceptTradeOpcode(p);
+            bot->GetSession()->HandleAcceptTradeOpcode(BOT_TYPED_PACKET(WorldPackets::Trade::AcceptTrade, p));
 
             if (bot->GetTradeData())
             {
@@ -121,7 +121,7 @@ void TradeStatusAction::BeginTrade()
         return;
 
     WorldPacket p;
-    bot->GetSession()->HandleBeginTradeOpcode(p);
+    bot->GetSession()->HandleBeginTradeOpcode(BOT_NULL_PACKET(p));
 
     ListItemsVisitor visitor;
     ai->InventoryIterateItems(&visitor, IterateItemsMask::ITERATE_ITEMS_IN_BAGS);

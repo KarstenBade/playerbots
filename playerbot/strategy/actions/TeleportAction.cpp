@@ -46,7 +46,7 @@ bool TeleportAction::Execute(Event& event)
         p << movement.lastAreaTrigger;
         p.rpos(0);
 
-        bot->GetSession()->HandleAreaTriggerOpcode(p);
+        bot->GetSession()->HandleAreaTriggerOpcode(BOT_TYPED_PACKET(WorldPackets::Misc::AreaTrigger, p));
         movement.lastAreaTrigger = 0;
         return true;
     }

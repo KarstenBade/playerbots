@@ -133,7 +133,12 @@ void PlayerbotHolder::UpdateSessions(uint32 elapsed)
         }
         else if (bot->IsInWorld())
         {
+#ifdef VMANGOS
+            // VMANGOS-TODO: no WorldSession::HandleBotPackets in vmangos; bot
+            // session packets go through the normal session-update path.
+#else
             bot->GetSession()->HandleBotPackets();
+#endif
         }
 
         if (bot->GetPlayerbotAI() && bot->GetPlayerbotAI()->GetShouldLogOut() && !bot->IsStunnedByLogout() && !bot->GetSession()->isLogingOut())
@@ -188,7 +193,7 @@ void PlayerbotMgr::CancelLogout()
             if (bot->IsStunnedByLogout() || bot->GetSession()->isLogingOut())
             {
                 WorldPacket p;
-                bot->GetSession()->HandleLogoutCancelOpcode(p);
+                bot->GetSession()->HandleLogoutCancelOpcode(BOT_NULL_PACKET(p));
                 ai->TellPlayer(GetMaster(), BOT_TEXT("logout_cancel"));
             }
         }
@@ -202,7 +207,7 @@ void PlayerbotMgr::CancelLogout()
             if (bot->IsStunnedByLogout() || bot->GetSession()->isLogingOut())
             {
                 WorldPacket p;
-                bot->GetSession()->HandleLogoutCancelOpcode(p);
+                bot->GetSession()->HandleLogoutCancelOpcode(BOT_NULL_PACKET(p));
             }
         }
     });
@@ -338,7 +343,7 @@ void PlayerbotHolder::JoinChatChannels(Player* bot)
 #endif
         pkt << std::string("World");
         pkt << ""; // Pass
-        bot->GetSession()->HandleJoinChannelOpcode(pkt);
+        bot->GetSession()->HandleJoinChannelOpcode(BOT_TYPED_PACKET(WorldPackets::Channel::JoinChannel, pkt));
     }
     // join standard channels
     uint8 locale = BroadcastHelper::GetLocale();
@@ -473,7 +478,7 @@ void PlayerbotHolder::OnBotLogin(Player * const bot)
             WorldPacket p;
             std::string member = bot->GetName();
             p << uint32(PARTY_OP_LEAVE) << member << uint32(0);
-            bot->GetSession()->HandleGroupDisbandOpcode(p);
+            bot->GetSession()->HandleGroupDisbandOpcode(BOT_NULL_PACKET(p));
         }
     }
 

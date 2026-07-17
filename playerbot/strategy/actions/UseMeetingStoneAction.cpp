@@ -241,7 +241,7 @@ bool AcceptSummonAction::Execute(Event& event)
 #if defined(MANGOSBOT_ONE) || defined(MANGOSBOT_TWO)
     response << uint8(1);
 #endif
-    bot->GetSession()->HandleSummonResponseOpcode(response);
+    bot->GetSession()->HandleSummonResponseOpcode(BOT_TYPED_PACKET(WorldPackets::Misc::SummonResponse, response));
     
     return true;
 }

@@ -64,7 +64,7 @@ bool OutfitAction::Execute(Event& event)
 
                 WorldPacket packet(CMSG_AUTOSTORE_BAG_ITEM, 3);
                 packet << bagIndex << slot << dstBag;
-                bot->GetSession()->HandleAutoStoreBagItemOpcode(packet);
+                bot->GetSession()->HandleAutoStoreBagItemOpcode(BOT_TYPED_PACKET(WorldPackets::Item::AutoStoreBagItem, packet));
             }
             EquipItems(requester, outfit);
             return true;

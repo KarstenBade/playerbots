@@ -27,7 +27,7 @@ bool ReachAreaTriggerAction::Execute(Event& event)
         WorldPacket p1(CMSG_AREATRIGGER);
         p1 << triggerId;
         p1.rpos(0);
-        bot->GetSession()->HandleAreaTriggerOpcode(p1);
+        bot->GetSession()->HandleAreaTriggerOpcode(BOT_TYPED_PACKET(WorldPackets::Misc::AreaTrigger, p1));
 
         return true;
     }
@@ -77,6 +77,6 @@ bool AreaTriggerAction::Execute(Event& event)
     WorldPacket p(CMSG_AREATRIGGER);
     p << triggerId;
     p.rpos(0);
-    bot->GetSession()->HandleAreaTriggerOpcode(p);
+    bot->GetSession()->HandleAreaTriggerOpcode(BOT_TYPED_PACKET(WorldPackets::Misc::AreaTrigger, p));
     return true;
 }

@@ -86,7 +86,7 @@ bool PetitionSignAction::Execute(Event& event)
     {
         WorldPacket data(MSG_PETITION_DECLINE);
         data << petitionGuid;
-        bot->GetSession()->HandlePetitionDeclineOpcode(data);
+        bot->GetSession()->HandlePetitionDeclineOpcode(BOT_TYPED_PACKET(WorldPackets::Petition::PetitionDecline, data));
         sLog.outDetail("Bot #%d <%s> declines %s invite", bot->GetGUIDLow(), bot->GetName(), isArena ? "Arena" : "Guild");
         return false;
     }
@@ -94,7 +94,7 @@ bool PetitionSignAction::Execute(Event& event)
     {
         WorldPacket data(CMSG_PETITION_SIGN, 20);
         data << petitionGuid << unk;
-        bot->GetSession()->HandlePetitionSignOpcode(data);
+        bot->GetSession()->HandlePetitionSignOpcode(BOT_TYPED_PACKET(WorldPackets::Petition::PetitionSign, data));
         bot->Say("Thanks for the invite!", LANG_UNIVERSAL);
         sLog.outDetail("Bot #%d <%s> accepts %s invite", bot->GetGUIDLow(), bot->GetName(), isArena ? "Arena" : "Guild");
         return true;

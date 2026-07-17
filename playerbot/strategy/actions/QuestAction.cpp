@@ -232,7 +232,7 @@ bool QuestAction::AcceptQuest(Player* requester, Quest const* quest, uint64 ques
         uint32 unk1 = 0;
         p << questGiver << questId << unk1;
         p.rpos(0);
-        bot->GetSession()->HandleQuestgiverAcceptQuestOpcode(p);
+        bot->GetSession()->HandleQuestgiverAcceptQuestOpcode(BOT_TYPED_PACKET(WorldPackets::Quest::QuestgiverAcceptQuest, p));
 
         if (bot->CanAddQuest(quest, false) && bot->GetQuestStatus(questId) == QUEST_STATUS_NONE && sPlayerbotAIConfig.syncQuestWithPlayer)
         {

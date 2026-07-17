@@ -62,6 +62,11 @@
 #define VMANGOS_GET_CREATURE_TEMPLATE(id) ObjectMgr::GetCreatureTemplate(id)
 #define VMANGOS_GET_GAMEOBJECT_INFO(id) ObjectMgr::GetGameObjectInfo(id)
 #define VMANGOS_GET_ITEM_PROTOTYPE(id) ObjectMgr::GetItemPrototype(id)
+// Opcode-handler call sites: vmangos handlers take typed WorldPackets::*
+// structs (or NullClientPacket); cmangos handlers take the WorldPacket
+// itself, so the type argument is dropped here.
+#define BOT_TYPED_PACKET(Type, wp) (wp)
+#define BOT_NULL_PACKET(wp) (wp)
 #endif
 // <<< VMANGOS
 

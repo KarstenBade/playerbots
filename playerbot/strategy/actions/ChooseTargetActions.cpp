@@ -177,7 +177,7 @@ bool SelectNewTargetAction::Execute(Event& event)
                 data << petGuid;
                 data << command;
                 data << targetGuid;
-                bot->GetSession()->HandlePetAction(data);
+                bot->GetSession()->HandlePetAction(BOT_TYPED_PACKET(WorldPackets::Pet::PetAction, data));
             }
         }
     }

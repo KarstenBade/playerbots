@@ -1055,10 +1055,10 @@ bool BGLeaveAction::Execute(Event& event)
 
     if (!event.getSource().empty())
     {
-        bot->GetSession()->HandleLeaveBattlefieldOpcode(packet);
+        bot->GetSession()->HandleLeaveBattlefieldOpcode(BOT_TYPED_PACKET(WorldPackets::Battleground::LeaveBattlefield, packet));
     }
     else
-        bot->GetSession()->HandleBattlefieldPortOpcode(packet);
+        bot->GetSession()->HandleBattlefieldPortOpcode(BOT_TYPED_PACKET(WorldPackets::Battleground::BattleFieldPort, packet));
 
     if (sRandomPlayerbotMgr.IsFreeBot(bot))
         ai->SetMaster(NULL);
@@ -1317,7 +1317,7 @@ bool BGStatusAction::Execute(Event& event)
         packet << uint32(0);
         packet << uint16(0);
 #endif
-        bot->GetSession()->HandleLeaveBattlefieldOpcode(packet);
+        bot->GetSession()->HandleLeaveBattlefieldOpcode(BOT_TYPED_PACKET(WorldPackets::Battleground::LeaveBattlefield, packet));
         ai->ResetStrategies();
         ai->GetAiObjectContext()->GetValue<uint32>("bg type")->Set(0);
         ai->GetAiObjectContext()->GetValue<uint32>("bg role")->Set(0);
@@ -1387,7 +1387,7 @@ bool BGStatusAction::Execute(Event& event)
             //Here we leave the current BG proper so we can join the next fresh.
             WorldPacket leave(CMSG_LEAVE_BATTLEFIELD);
             leave << uint8(0) << uint8(0) << uint32(0) << uint16(0);
-            bot->GetSession()->HandleLeaveBattlefieldOpcode(leave);
+            bot->GetSession()->HandleLeaveBattlefieldOpcode(BOT_TYPED_PACKET(WorldPackets::Battleground::LeaveBattlefield, leave));
             //Queue the event again to try to join next tick.
             //ai->HandleBotOutgoingPacket(event.getPacket());
             return true;
@@ -1403,7 +1403,7 @@ bool BGStatusAction::Execute(Event& event)
             return false;
         }
 #endif
-        bot->GetSession()->HandleBattlefieldPortOpcode(packet);
+        bot->GetSession()->HandleBattlefieldPortOpcode(BOT_TYPED_PACKET(WorldPackets::Battleground::BattleFieldPort, packet));
 
         ai->ResetStrategies(false);
         context->GetValue<uint32>("bg role")->Set(urand(0, 9));
@@ -1426,7 +1426,7 @@ bool BGStatusCheckAction::Execute(Event& event)
         return false;
 
     WorldPacket packet(CMSG_BATTLEFIELD_STATUS);
-    bot->GetSession()->HandleBattlefieldStatusOpcode(packet);
+    bot->GetSession()->HandleBattlefieldStatusOpcode(BOT_NULL_PACKET(packet));
     sLog.outDetail("Bot #%d <%s> (%u %s) : Checking BG invite status", bot->GetGUIDLow(), bot->GetName(), bot->GetLevel(), bot->GetTeam() == ALLIANCE ? "A" : "H");
     return true;
 }

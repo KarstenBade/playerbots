@@ -4506,13 +4506,13 @@ bool BGTactics::atFlag(std::vector<BattleBotPath*> const& vPaths, std::vector<ui
                     {
                         WorldPacket data(CMSG_AREATRIGGER);
                         data << uint32(WS_AT_WARSONG_ROOM);
-                        bot->GetSession()->HandleAreaTriggerOpcode(data);
+                        bot->GetSession()->HandleAreaTriggerOpcode(BOT_TYPED_PACKET(WorldPackets::Misc::AreaTrigger, data));
                     }
                     else
                     {
                         WorldPacket data(CMSG_AREATRIGGER);
                         data << uint32(WS_AT_SILVERWING_ROOM);
-                        bot->GetSession()->HandleAreaTriggerOpcode(data);
+                        bot->GetSession()->HandleAreaTriggerOpcode(BOT_TYPED_PACKET(WorldPackets::Misc::AreaTrigger, data));
                     }
                     //ostringstream out; out << "Capturing flag!";
                     //bot->Say(out.str(), LANG_UNIVERSAL);
@@ -4529,7 +4529,7 @@ bool BGTactics::atFlag(std::vector<BattleBotPath*> const& vPaths, std::vector<ui
                 //bot->Say(out.str(), LANG_UNIVERSAL);
                 WorldPacket data(CMSG_GAMEOBJ_USE);
                 data << go->GetObjectGuid();
-                bot->GetSession()->HandleGameObjectUseOpcode(data);
+                bot->GetSession()->HandleGameObjectUseOpcode(BOT_TYPED_PACKET(WorldPackets::Misc::GameObjectUse, data));
 
                 resetObjective();
                 return true;

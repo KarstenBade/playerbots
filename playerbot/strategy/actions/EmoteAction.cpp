@@ -118,7 +118,7 @@ bool EmoteActionBase::Emote(Unit* target, uint32 type, bool textEmote)
         data << type;
         data << urand(0, GetNumberOfEmoteVariants((TextEmotes)type, bot->getRace(), bot->getGender()) - 1);
         data << ((bot->GetSelectionGuid() && urand(0, 1)) ? bot->GetSelectionGuid() : ObjectGuid());
-        bot->GetSession()->HandleTextEmoteOpcode(data);
+        bot->GetSession()->HandleTextEmoteOpcode(BOT_TYPED_PACKET(WorldPackets::Misc::TextEmote, data));
     }
     else
         bot->HandleEmoteCommand(type);
@@ -639,7 +639,7 @@ bool EmoteActionBase::ReceiveEmote(Player* requester, Player* source, uint32 emo
         data << textEmote;
         data << urand(0, GetNumberOfEmoteVariants((TextEmotes)textEmote, bot->getRace(), bot->getGender()) - 1);
         data << ((source && urand(0, 1)) ? source->GetObjectGuid() : ObjectGuid());
-        bot->GetSession()->HandleTextEmoteOpcode(data);
+        bot->GetSession()->HandleTextEmoteOpcode(BOT_TYPED_PACKET(WorldPackets::Misc::TextEmote, data));
     }
     else
     {
@@ -795,7 +795,7 @@ bool EmoteAction::Execute(Event& event)
         data << textEmotes[param];
         data << urand(0, GetNumberOfEmoteVariants((TextEmotes)textEmotes[param], bot->getRace(), bot->getGender()) - 1);
         data << ((bot->GetSelectionGuid() && urand(0, 1)) ? bot->GetSelectionGuid() : ObjectGuid());
-        bot->GetSession()->HandleTextEmoteOpcode(data);
+        bot->GetSession()->HandleTextEmoteOpcode(BOT_TYPED_PACKET(WorldPackets::Misc::TextEmote, data));
 
         if (emotes.find(param) != emotes.end())
             bot->HandleEmoteCommand(emotes[param]);
@@ -858,7 +858,7 @@ bool TalkAction::Execute(Event& event)
         data << emote;
         data << urand(0, GetNumberOfEmoteVariants((TextEmotes)emote, bot->getRace(), bot->getGender()) - 1);
         data << ((target && urand(0, 1)) ? target->GetObjectGuid() : ObjectGuid());
-        bot->GetSession()->HandleTextEmoteOpcode(data);
+        bot->GetSession()->HandleTextEmoteOpcode(BOT_TYPED_PACKET(WorldPackets::Misc::TextEmote, data));
         return true;
     }
 
@@ -1396,7 +1396,7 @@ bool MountAnimAction::isUseful()
 bool MountAnimAction::Execute(Event& event)
 {
     WorldPacket p;
-    bot->GetSession()->HandleMountSpecialAnimOpcode(p);
+    bot->GetSession()->HandleMountSpecialAnimOpcode(BOT_NULL_PACKET(p));
 
     return true;
 }

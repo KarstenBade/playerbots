@@ -39,7 +39,7 @@ void UnequipAction::UnequipItem(PlayerbotAI* ai, Player* requester, Item* item, 
 
     WorldPacket packet(CMSG_AUTOSTORE_BAG_ITEM, 3);
     packet << bagIndex << slot << dstBag;
-    bot->GetSession()->HandleAutoStoreBagItemOpcode(packet);
+    bot->GetSession()->HandleAutoStoreBagItemOpcode(BOT_TYPED_PACKET(WorldPackets::Item::AutoStoreBagItem, packet));
 
     RESET_AI_VALUE2(ItemUsage, "item usage", ItemQualifier(item).GetQualifier());
 

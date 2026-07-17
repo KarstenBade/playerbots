@@ -125,14 +125,14 @@ bool RpgEmoteAction::Execute(Event& event)
         data << type;
         data << 1;
         data << rpg->guidP();
-        bot->GetSession()->HandleTextEmoteOpcode(data);
+        bot->GetSession()->HandleTextEmoteOpcode(BOT_TYPED_PACKET(WorldPackets::Misc::TextEmote, data));
     }
     else
         type = TalkAction::GetRandomEmote(rpg->guidP().GetUnit(bot->GetInstanceId()));
 
     WorldPacket p1;
     p1 << rpg->guid();
-    bot->GetSession()->HandleGossipHelloOpcode(p1);
+    bot->GetSession()->HandleGossipHelloOpcode(BOT_TYPED_PACKET(WorldPackets::Npc::GossipHello, p1));
 
     bot->HandleEmoteCommand(type);
 
@@ -714,7 +714,7 @@ bool RpgTradeUsefulAction::Execute(Event& event)
     {
         WorldPacket packet(CMSG_INITIATE_TRADE);
         packet << bot->GetObjectGuid();
-        player->GetSession()->HandleInitiateTradeOpcode(packet);
+        player->GetSession()->HandleInitiateTradeOpcode(BOT_TYPED_PACKET(WorldPackets::Trade::InitiateTrade, packet));
     }
 
     if (!IsTradingItem(item->GetEntry()))
@@ -737,7 +737,7 @@ bool RpgTradeUsefulAction::Execute(Event& event)
                 WorldPacket p;
                 uint32 status = TRADE_STATUS_TRADE_ACCEPT;
                 p << status;
-                bot->GetSession()->HandleAcceptTradeOpcode(p);
+                bot->GetSession()->HandleAcceptTradeOpcode(BOT_TYPED_PACKET(WorldPackets::Trade::AcceptTrade, p));
             }
         }
         //else
@@ -797,7 +797,7 @@ bool RpgEnchantAction::Execute(Event& event)
             ai->TellDebug(ai->GetMaster(), "open trade window", "debug rpg");
             WorldPacket packet(CMSG_INITIATE_TRADE);
             packet << player->GetObjectGuid();
-            bot->GetSession()->HandleInitiateTradeOpcode(packet);
+            bot->GetSession()->HandleInitiateTradeOpcode(BOT_TYPED_PACKET(WorldPackets::Trade::InitiateTrade, packet));
         }
 
         if (!player->GetTradeData() || !player->GetTradeData()->HasItem(item->GetObjectGuid()))
@@ -829,7 +829,7 @@ bool RpgEnchantAction::Execute(Event& event)
                     WorldPacket p;
                     uint32 status = TRADE_STATUS_TRADE_ACCEPT;
                     p << status;
-                    bot->GetSession()->HandleAcceptTradeOpcode(p);
+                    bot->GetSession()->HandleAcceptTradeOpcode(BOT_TYPED_PACKET(WorldPackets::Trade::AcceptTrade, p));
                 }
             }
 

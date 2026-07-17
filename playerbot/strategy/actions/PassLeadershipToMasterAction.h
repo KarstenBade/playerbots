@@ -17,7 +17,7 @@ namespace ai
             {
                 WorldPacket p(SMSG_GROUP_SET_LEADER, 8);
                 p << passLeaderTo->GetObjectGuid();
-                bot->GetSession()->HandleGroupSetLeaderOpcode(p);
+                bot->GetSession()->HandleGroupSetLeaderOpcode(BOT_TYPED_PACKET(WorldPackets::Group::GroupSetLeader, p));
                 
                 if (!message.empty())
                     ai->TellPlayerNoFacing(passLeaderTo, message);

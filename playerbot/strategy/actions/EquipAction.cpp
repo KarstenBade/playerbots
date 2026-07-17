@@ -315,7 +315,7 @@ void EquipAction::EquipItem(PlayerbotAI* ai, Player* requester, Item* item, bool
         {
             WorldPacket packet(CMSG_AUTOEQUIP_ITEM, 2);
             packet << bagIndex << slot;
-            bot->GetSession()->HandleAutoEquipItemOpcode(packet);
+            bot->GetSession()->HandleAutoEquipItemOpcode(BOT_TYPED_PACKET(WorldPackets::Item::AutoEquipItem, packet));
         }
     }
 

@@ -34,7 +34,7 @@ namespace ai
             WorldPacket p;
             uint32 roles_mask = 0;
             p << roles_mask;
-            bot->GetSession()->HandleGroupAcceptOpcode(p);
+            bot->GetSession()->HandleGroupAcceptOpcode(BOT_NULL_PACKET(p));
 
             if (!bot->GetGroup() || !bot->GetGroup()->IsMember(inviter->GetObjectGuid()))
                 return false;

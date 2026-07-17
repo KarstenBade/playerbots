@@ -78,7 +78,7 @@ namespace ai
                 {
                     WorldPacket data(CMSG_GAMEOBJ_USE);
                     data << go->GetObjectGuid();
-                    bot->GetSession()->HandleGameObjectUseOpcode(data);
+                    bot->GetSession()->HandleGameObjectUseOpcode(BOT_TYPED_PACKET(WorldPackets::Misc::GameObjectUse, data));
                     return true;
                 }
                 else

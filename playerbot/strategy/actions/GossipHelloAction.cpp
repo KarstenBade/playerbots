@@ -59,7 +59,7 @@ bool GossipHelloAction::Execute(Event& event)
 	{
         WorldPacket p1;
         p1 << guid;
-        bot->GetSession()->HandleGossipHelloOpcode(p1);
+        bot->GetSession()->HandleGossipHelloOpcode(BOT_TYPED_PACKET(WorldPackets::Npc::GossipHello, p1));
         sServerFacade.SetFacingTo(bot, pCreature);
 
         std::ostringstream out; out << "--- " << pCreature->GetName() << " ---";
@@ -159,7 +159,7 @@ bool GossipHelloAction::ProcessGossip(Player* requester, ObjectGuid creatureGuid
     p << menu.GetMenuId() << actualMenuToSelect;
 #endif
     p << code;
-    bot->GetSession()->HandleGossipSelectOptionOpcode(p);
+    bot->GetSession()->HandleGossipSelectOptionOpcode(BOT_TYPED_PACKET(WorldPackets::Npc::GossipSelectOption, p));
 
     if(!noFeedback)
         TellGossipMenus(requester);

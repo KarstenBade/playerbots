@@ -26,7 +26,7 @@ bool LootAction::Execute(Event& event)
     {
         WorldPacket packet(CMSG_LOOT_RELEASE, 8);
         packet << prevLoot.guid;
-        bot->GetSession()->HandleLootReleaseOpcode(packet);
+        bot->GetSession()->HandleLootReleaseOpcode(BOT_TYPED_PACKET(WorldPackets::Loot::LootRelease, packet));
     }
 
     context->GetValue<LootObject>("loot target")->Set(lootObject);
@@ -78,7 +78,7 @@ bool OpenLootAction::DoLoot(LootObject& lootObject)
 
         WorldPacket packet(CMSG_LOOT, 8);
         packet << lootObject.guid;
-        bot->GetSession()->HandleLootOpcode(packet);
+        bot->GetSession()->HandleLootOpcode(BOT_TYPED_PACKET(WorldPackets::Loot::LootUnit, packet));
         SetDuration(sPlayerbotAIConfig.lootDelay);
 
         if (bot->isRealPlayer())
@@ -284,7 +284,7 @@ bool StoreLootAction::Execute(Event& event)
     if (gold > 0)
     {
         WorldPacket packet(CMSG_LOOT_MONEY, 0);
-        bot->GetSession()->HandleLootMoneyOpcode(packet);
+        bot->GetSession()->HandleLootMoneyOpcode(BOT_NULL_PACKET(packet));
     }
 
     for (uint8 i = 0; i < items; ++i)
@@ -342,7 +342,7 @@ bool StoreLootAction::Execute(Event& event)
 
         WorldPacket packet(CMSG_AUTOSTORE_LOOT_ITEM, 1);
         packet << itemindex;
-        bot->GetSession()->HandleAutostoreLootItemOpcode(packet);
+        bot->GetSession()->HandleAutostoreLootItemOpcode(BOT_TYPED_PACKET(WorldPackets::Loot::AutoStoreLootItem, packet));
 
         if (proto->Quality > ITEM_QUALITY_NORMAL && !urand(0, 50) && ai->HasStrategy("emote", BotState::BOT_STATE_NON_COMBAT)) ai->PlayEmote(TEXTEMOTE_CHEER);
         if (proto->Quality >= ITEM_QUALITY_RARE && !urand(0, 1) && ai->HasStrategy("emote", BotState::BOT_STATE_NON_COMBAT)) ai->PlayEmote(TEXTEMOTE_CHEER);
@@ -366,7 +366,7 @@ bool StoreLootAction::Execute(Event& event)
     // release loot
     WorldPacket packet(CMSG_LOOT_RELEASE, 8);
     packet << guid;
-    bot->GetSession()->HandleLootReleaseOpcode(packet);
+    bot->GetSession()->HandleLootReleaseOpcode(BOT_TYPED_PACKET(WorldPackets::Loot::LootRelease, packet));
 
     ai->AccelerateRespawn(guid);
 
@@ -441,7 +441,7 @@ bool ReleaseLootAction::Execute(Event& event)
     {
         WorldPacket packet(CMSG_LOOT_RELEASE, 8);
         packet << *i;
-        bot->GetSession()->HandleLootReleaseOpcode(packet);
+        bot->GetSession()->HandleLootReleaseOpcode(BOT_TYPED_PACKET(WorldPackets::Loot::LootRelease, packet));
     }
 
     std::list<ObjectGuid> corpses = context->GetValue<std::list<ObjectGuid> >("nearest corpses")->Get();
@@ -449,7 +449,7 @@ bool ReleaseLootAction::Execute(Event& event)
     {
         WorldPacket packet(CMSG_LOOT_RELEASE, 8);
         packet << *i;
-        bot->GetSession()->HandleLootReleaseOpcode(packet);
+        bot->GetSession()->HandleLootReleaseOpcode(BOT_TYPED_PACKET(WorldPackets::Loot::LootRelease, packet));
     }
 
     return true;

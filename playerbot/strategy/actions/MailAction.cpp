@@ -109,7 +109,7 @@ public:
             WorldPacket packet;
             packet << mailbox;
             packet << mail->messageID;
-            bot->GetSession()->HandleMailTakeMoney(packet);
+            bot->GetSession()->HandleMailTakeMoney(BOT_TYPED_PACKET(WorldPackets::Mail::MailTakeMoney, packet));
             RemoveMail(bot, mail->messageID, mailbox);
         }
         else if (mail->has_items)
@@ -146,7 +146,7 @@ public:
                     }
                 }
 
-                bot->GetSession()->HandleMailTakeItem(packet);
+                bot->GetSession()->HandleMailTakeItem(BOT_TYPED_PACKET(WorldPackets::Mail::MailTakeItem, packet));
             }
 
             RemoveMail(bot, mail->messageID, mailbox);
@@ -335,7 +335,7 @@ void MailProcessor::RemoveMail(Player* bot, uint32 id, ObjectGuid mailbox)
 #ifndef MANGOSBOT_ZERO
     packet << (uint32)0; //mailTemplateId
 #endif
-    bot->GetSession()->HandleMailDelete(packet);
+    bot->GetSession()->HandleMailDelete(BOT_TYPED_PACKET(WorldPackets::Mail::MailDelete, packet));
 }
 
 ObjectGuid MailProcessor::FindMailbox(PlayerbotAI* ai)

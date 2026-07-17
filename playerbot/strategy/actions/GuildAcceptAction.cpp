@@ -77,7 +77,7 @@ bool GuildAcceptAction::Execute(Event& event)
     WorldPacket packet;
     if (accept)
     {
-        bot->GetSession()->HandleGuildAcceptOpcode(packet);
+        bot->GetSession()->HandleGuildAcceptOpcode(BOT_NULL_PACKET(packet));
 
         TalentSpec::SetPublicNote(bot);
 
@@ -85,7 +85,7 @@ bool GuildAcceptAction::Execute(Event& event)
     }
     else
     {
-        bot->GetSession()->HandleGuildDeclineOpcode(packet);
+        bot->GetSession()->HandleGuildDeclineOpcode(BOT_NULL_PACKET(packet));
     }
     return true;
 }

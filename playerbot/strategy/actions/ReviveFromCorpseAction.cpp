@@ -51,7 +51,7 @@ bool ReviveFromCorpseAction::Execute(Event& event)
     ai->StopMoving();
     WorldPacket packet(CMSG_RECLAIM_CORPSE);
     packet << bot->GetObjectGuid();
-    bot->GetSession()->HandleReclaimCorpseOpcode(packet);
+    bot->GetSession()->HandleReclaimCorpseOpcode(BOT_TYPED_PACKET(WorldPackets::Misc::ReclaimCorpse, packet));
 
     sPlayerbotAIConfig.logEvent(ai, "ReviveFromCorpseAction");
 

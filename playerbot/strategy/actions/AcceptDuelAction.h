@@ -25,12 +25,12 @@ namespace ai
             {
                 WorldPacket packet(CMSG_DUEL_CANCELLED, 8);
                 packet << flagGuid;
-                bot->GetSession()->HandleDuelCancelledOpcode(packet);
+                bot->GetSession()->HandleDuelCancelledOpcode(BOT_TYPED_PACKET(WorldPackets::Duel::DuelCancelled, packet));
             }
 
             WorldPacket packet(CMSG_DUEL_ACCEPTED, 8);
             packet << flagGuid;
-            bot->GetSession()->HandleDuelAcceptedOpcode(packet);
+            bot->GetSession()->HandleDuelAcceptedOpcode(BOT_TYPED_PACKET(WorldPackets::Duel::DuelAccepted, packet));
 
             ai->ResetStrategies();
             return true;

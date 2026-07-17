@@ -116,7 +116,7 @@ bool GuildAcceptQuestOrderAction::Execute(Event& event)
         uint32 unk1 = 0;
         p << unit->GetObjectGuid() << order.questId << unk1;
         p.rpos(0);
-        bot->GetSession()->HandleQuestgiverAcceptQuestOpcode(p);
+        bot->GetSession()->HandleQuestgiverAcceptQuestOpcode(BOT_TYPED_PACKET(WorldPackets::Quest::QuestgiverAcceptQuest, p));
 
         if (bot->GetQuestStatus(order.questId) != QUEST_STATUS_NONE &&
             bot->GetQuestStatus(order.questId) != QUEST_STATUS_AVAILABLE)
@@ -145,7 +145,7 @@ bool GuildAcceptQuestOrderAction::Execute(Event& event)
         uint32 unk1 = 0;
         p << go->GetObjectGuid() << order.questId << unk1;
         p.rpos(0);
-        bot->GetSession()->HandleQuestgiverAcceptQuestOpcode(p);
+        bot->GetSession()->HandleQuestgiverAcceptQuestOpcode(BOT_TYPED_PACKET(WorldPackets::Quest::QuestgiverAcceptQuest, p));
 
         if (bot->GetQuestStatus(order.questId) != QUEST_STATUS_NONE &&
             bot->GetQuestStatus(order.questId) != QUEST_STATUS_AVAILABLE)

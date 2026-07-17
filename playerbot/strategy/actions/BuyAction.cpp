@@ -389,7 +389,7 @@ bool BuyBackAction::Execute(Event& event)
         WorldPacket p1(CMSG_BUYBACK_ITEM);
         p1 << vendorguid;
         p1 << slot;
-        bot->GetSession()->HandleBuybackItem(p1);
+        bot->GetSession()->HandleBuybackItem(BOT_TYPED_PACKET(WorldPackets::Item::BuybackItem, p1));
         if (bot->GetItemFromBuyBackSlot(slot) == nullptr)
             result = true;
     }

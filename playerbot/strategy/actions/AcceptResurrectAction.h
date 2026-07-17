@@ -21,7 +21,7 @@ namespace ai
                 WorldPacket packet(CMSG_RESURRECT_RESPONSE, 8+1);
                 packet << guid;
                 packet << uint8(1);                                       // accept
-                bot->GetSession()->HandleResurrectResponseOpcode(packet); // queue the packet to get around race condition
+                bot->GetSession()->HandleResurrectResponseOpcode(BOT_TYPED_PACKET(WorldPackets::Misc::ResurrectResponse, packet)); // queue the packet to get around race condition
                 return true;
             }
 

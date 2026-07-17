@@ -103,7 +103,7 @@ bool SellAction::Sell(Player* requester, Item* item)
 
         WorldPacket p;
         p << vendorguid << itemguid << count;
-        bot->GetSession()->HandleSellItemOpcode(p);
+        bot->GetSession()->HandleSellItemOpcode(BOT_TYPED_PACKET(WorldPackets::Item::SellItem, p));
 
         if (ai->HasCheat(BotCheatMask::gold))
         {

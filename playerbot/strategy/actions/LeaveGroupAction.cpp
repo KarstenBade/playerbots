@@ -30,7 +30,7 @@ namespace ai
             WorldPacket p;
             std::string member = bot->GetName();
             p << uint32(PARTY_OP_LEAVE) << member << uint32(0);
-            bot->GetSession()->HandleGroupDisbandOpcode(p);
+            bot->GetSession()->HandleGroupDisbandOpcode(BOT_NULL_PACKET(p));
             if (ai->HasRealPlayerMaster() && ai->GetMaster()->GetObjectGuid() != player->GetObjectGuid())
                 bot->Whisper("I left my group", LANG_UNIVERSAL, player->GetObjectGuid());
         }

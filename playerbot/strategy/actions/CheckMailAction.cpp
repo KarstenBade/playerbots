@@ -9,7 +9,7 @@ using namespace ai;
 bool CheckMailAction::Execute(Event& event)
 {
     WorldPacket p;
-    bot->GetSession()->HandleQueryNextMailTime(p);   
+    bot->GetSession()->HandleQueryNextMailTime(BOT_NULL_PACKET(p));   
 
     std::list<uint32> ids;
 

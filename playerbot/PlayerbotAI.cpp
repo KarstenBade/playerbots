@@ -273,7 +273,7 @@ void PlayerbotAI::UpdateAI(uint32 elapsed, bool minimal)
         if (sServerFacade.IsInCombat(bot) || (master && sServerFacade.IsInCombat(master) && sServerFacade.GetDistance2d(bot, master) < 30.0f))
         {
             WorldPacket p;
-            bot->GetSession()->HandleLogoutCancelOpcode(p);
+            bot->GetSession()->HandleLogoutCancelOpcode(BOT_NULL_PACKET(p));
             TellPlayer(GetMaster(), BOT_TEXT("logout_cancel"));
         }
     }
@@ -1240,14 +1240,18 @@ void PlayerbotAI::HandleTeleportAck()
 #endif
 		p << (uint32) 0; // supposed to be flags? not used currently
 		p << (uint32) time(0); // time - not currently used
-        bot->GetSession()->HandleMoveTeleportAckOpcode(p);
+        bot->GetSession()->HandleMoveTeleportAckOpcode(BOT_TYPED_PACKET(WorldPackets::Movement::MoveTeleportAck, p));
 
         // add delay to simulate teleport delay
         SetAIInternalUpdateDelay(urand(1000, 2000));
 	}
 	else if (bot->IsBeingTeleportedFar())
 	{
+#ifdef VMANGOS
+        bot->GetSession()->HandleMoveWorldportAckOpcode(NullClientPacket(MSG_MOVE_WORLDPORT_ACK));
+#else
         bot->GetSession()->HandleMoveWorldportAckOpcode();
+#endif
 
         // add delay to simulate teleport delay
         SetAIInternalUpdateDelay(urand(2000, 5000));
@@ -1327,7 +1331,7 @@ void PlayerbotAI::Reset(bool full)
         if (!logout && (bot->IsStunnedByLogout() || bot->GetSession()->isLogingOut()))
         {
             WorldPacket p;
-            bot->GetSession()->HandleLogoutCancelOpcode(p);
+            bot->GetSession()->HandleLogoutCancelOpcode(BOT_NULL_PACKET(p));
             TellPlayer(GetMaster(), BOT_TEXT("logout_cancel"));
         }
     }
@@ -1517,7 +1521,7 @@ void PlayerbotAI::HandleCommand(uint32 type, const std::string& text, Player& fr
                 TellPlayer(&fromPlayer, BOT_TEXT("logout_cancel"));
 
             WorldPacket p;
-            bot->GetSession()->HandleLogoutCancelOpcode(p);
+            bot->GetSession()->HandleLogoutCancelOpcode(BOT_NULL_PACKET(p));
             SetShouldLogOut(false);
         }
     }
@@ -1944,7 +1948,7 @@ void PlayerbotAI::HandleBotOutgoingPacket(const WorldPacket& packet)
 #endif
         ack << uint32(0);
         ack << bot->m_movementInfo;
-        bot->GetSession()->HandleMoveKnockBackAck(ack);
+        bot->GetSession()->HandleMoveKnockBackAck(BOT_TYPED_PACKET(WorldPackets::Movement::MoveKnockBackAck, ack));
 
         // write jump time
         uint32 curTime = sWorld.GetCurrentMSTime();

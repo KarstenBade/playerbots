@@ -144,7 +144,7 @@ bool AhAction::PostItem(Player* requester, Item* item, uint32 price, Unit* aucti
     packet << price; //buyout price?
     packet << time;
 
-    bot->GetSession()->HandleAuctionSellItem(packet);
+    bot->GetSession()->HandleAuctionSellItem(BOT_TYPED_PACKET(WorldPackets::AuctionHouse::AuctionSellItem, packet));
 
     if (bot->GetItemByGuid(itemGuid))
         return false;
@@ -419,7 +419,7 @@ bool AhBidAction::BidItem(Player* requester, AuctionEntry* auction, uint32 price
 
     ItemPrototype const* proto = sObjectMgr.GetItemPrototype(auction->itemTemplate);
 
-    bot->GetSession()->HandleAuctionPlaceBid(packet);
+    bot->GetSession()->HandleAuctionPlaceBid(BOT_TYPED_PACKET(WorldPackets::AuctionHouse::AuctionPlaceBid, packet));
 
     if (bot->GetMoney() < oldMoney)
     {

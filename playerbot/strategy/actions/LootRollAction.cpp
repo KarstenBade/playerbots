@@ -93,7 +93,7 @@ bool RollAction::Execute(Event& event)
         WorldPacket data(MSG_RANDOM_ROLL);
         data << stoi(args[1]);
         data << stoi(args[2]);
-        bot->GetSession()->HandleRandomRollOpcode(data);
+        bot->GetSession()->HandleRandomRollOpcode(BOT_TYPED_PACKET(WorldPackets::Group::RandomRoll, data));
 
         return true;
     }

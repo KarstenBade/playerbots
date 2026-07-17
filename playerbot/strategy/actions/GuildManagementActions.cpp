@@ -263,6 +263,6 @@ bool GuildLeaveAction::Execute(Event& event)
     sPlayerbotAIConfig.logEvent(ai, "GuildLeaveAction", guild->GetName(), std::to_string(guild->GetMemberSize()));
 
     WorldPacket packet;
-    bot->GetSession()->HandleGuildLeaveOpcode(packet);
+    bot->GetSession()->HandleGuildLeaveOpcode(BOT_NULL_PACKET(packet));
     return true;
 }

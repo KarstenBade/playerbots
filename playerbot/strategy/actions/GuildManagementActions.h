@@ -30,7 +30,7 @@ namespace ai
         virtual bool isUseful() override { return bot->GetGuildId() && sGuildMgr.GetGuildById(bot->GetGuildId())->HasRankRight(bot->GetRank(), GR_RIGHT_INVITE) && !GuildIsFull(bot->GetGuildId()); }
     
     protected:
-        virtual void SendPacket(WorldPacket data, Event event) override { bot->GetSession()->HandleGuildInviteOpcode(data); };
+        virtual void SendPacket(WorldPacket data, Event event) override { bot->GetSession()->HandleGuildInviteOpcode(BOT_TYPED_PACKET(WorldPackets::Guild::GuildInvite, data)); };
         virtual bool PlayerIsValid(Player* member) override { return !member->GetGuildId(); };
     };
 
@@ -42,7 +42,7 @@ namespace ai
     
     protected:
         virtual WorldPacket GetPacket(Player* player) override { WorldPacket data(Opcodes(opcode), 8); data << bot->GetName(); return data; }
-        virtual void SendPacket(WorldPacket data, Event event) override { if(GetPlayer(event)) GetPlayer(event)->GetSession()->HandleGuildInviteOpcode(data); };
+        virtual void SendPacket(WorldPacket data, Event event) override { if(GetPlayer(event)) GetPlayer(event)->GetSession()->HandleGuildInviteOpcode(BOT_TYPED_PACKET(WorldPackets::Guild::GuildInvite, data)); };
         virtual bool PlayerIsValid(Player* member) override { return !bot->GetGuildId() && member->GetGuildId() && sGuildMgr.GetGuildById(member->GetGuildId())->HasRankRight(member->GetRank(), GR_RIGHT_INVITE) && !GuildIsFull(member->GetGuildId()); };
     };
 
@@ -53,7 +53,7 @@ namespace ai
         virtual bool isUseful() override { return bot->GetGuildId() && sGuildMgr.GetGuildById(bot->GetGuildId())->HasRankRight(bot->GetRank(), GR_RIGHT_PROMOTE); }
     
     protected:
-        virtual void SendPacket(WorldPacket data, Event event) override { bot->GetSession()->HandleGuildPromoteOpcode(data); };
+        virtual void SendPacket(WorldPacket data, Event event) override { bot->GetSession()->HandleGuildPromoteOpcode(BOT_TYPED_PACKET(WorldPackets::Guild::GuildPromote, data)); };
         virtual bool PlayerIsValid(Player* member) override { return member->GetGuildId() == bot->GetGuildId() && GetRankId(bot) < GetRankId(member) - 1; };
     };
 
@@ -64,7 +64,7 @@ namespace ai
         virtual bool isUseful() override { return bot->GetGuildId() && sGuildMgr.GetGuildById(bot->GetGuildId())->HasRankRight(bot->GetRank(), GR_RIGHT_DEMOTE); }
     
     protected:
-        virtual void SendPacket(WorldPacket data, Event event) override { bot->GetSession()->HandleGuildDemoteOpcode(data); };
+        virtual void SendPacket(WorldPacket data, Event event) override { bot->GetSession()->HandleGuildDemoteOpcode(BOT_TYPED_PACKET(WorldPackets::Guild::GuildDemote, data)); };
         virtual bool PlayerIsValid(Player* member) override { return member->GetGuildId() == bot->GetGuildId() && GetRankId(bot) < GetRankId(member); };
     };
 
@@ -75,7 +75,7 @@ namespace ai
         virtual bool isUseful() override { return bot->GetGuildId() && sGuildMgr.GetGuildById(bot->GetGuildId())->GetLeaderGuid() == bot->GetObjectGuid(); }
     
     protected:
-        virtual void SendPacket(WorldPacket data, Event event) override { bot->GetSession()->HandleGuildLeaderOpcode(data); };
+        virtual void SendPacket(WorldPacket data, Event event) override { bot->GetSession()->HandleGuildLeaderOpcode(BOT_TYPED_PACKET(WorldPackets::Guild::GuildLeader, data)); };
         virtual bool PlayerIsValid(Player* member) override { return member->GetGuildId() == bot->GetGuildId() && GetRankId(bot) < GetRankId(member) - 1; };
     };
     
@@ -86,7 +86,7 @@ namespace ai
         virtual bool isUseful() override { return bot->GetGuildId() && sGuildMgr.GetGuildById(bot->GetGuildId())->HasRankRight(bot->GetRank(), GR_RIGHT_REMOVE); }
     
     protected:
-        virtual void SendPacket(WorldPacket data, Event event) override { bot->GetSession()->HandleGuildRemoveOpcode(data); };
+        virtual void SendPacket(WorldPacket data, Event event) override { bot->GetSession()->HandleGuildRemoveOpcode(BOT_TYPED_PACKET(WorldPackets::Guild::GuildRemove, data)); };
         virtual bool PlayerIsValid(Player* member) override { return member->GetGuildId() == bot->GetGuildId() && GetRankId(bot) < GetRankId(member); };
     };
 

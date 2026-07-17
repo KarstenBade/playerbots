@@ -202,7 +202,7 @@ bool ReadyCheckAction::ReadyCheck(Player* requester)
 
     WorldPacket packet(MSG_RAID_READY_CHECK);
     packet << uint8(1);
-    bot->GetSession()->HandleRaidReadyCheckOpcode(packet);
+    bot->GetSession()->HandleRaidReadyCheckOpcode(BOT_TYPED_PACKET(WorldPackets::Group::RaidReadyCheck, packet));
 
     ai->ChangeStrategy("-ready check", BotState::BOT_STATE_NON_COMBAT);
 
