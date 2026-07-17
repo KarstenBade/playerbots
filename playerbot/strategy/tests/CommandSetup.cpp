@@ -353,7 +353,11 @@ TestResult CommandSetupPull::Execute(const std::string& params, Player* bot,
     if (target->AI())
         target->AI()->AttackStart(bot);
     // Disable leashing so the boss doesn't evade
+#ifdef VMANGOS
+    // VMANGOS-TODO: vmangos has no CombatManager leash control.
+#else
     target->GetCombatManager().SetLeashingDisable(true);
+#endif
     ctx.focusMobEntry = entryId;
     ctx.focusMobGuid = target->GetObjectGuid();
     sLog.outString("[TestAction] Bot %s pulling creature %s (entry %u) at distance %.1f",

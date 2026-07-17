@@ -456,7 +456,12 @@ BotPool PlayerBotLoginMgr::LoadBotsFromDb()
 
 void PlayerBotLoginMgr::SendHolders(const BotInfos& queue)
 {  
+#ifdef VMANGOS
+    // VMANGOS-TODO: vmangos's Database::AsyncPQuery has a different callback
+    // shape; the database-latency ping is disabled (GetDatabaseDelay reads 0).
+#else
     CharacterDatabase.AsyncPQuery(&RandomPlayerbotMgr::DatabasePing, sWorld.GetCurrentMSTime(), std::string("CharacterDatabase"), "select 1");
+#endif
 
     for (auto& info : queue)
     {
@@ -468,7 +473,12 @@ void PlayerBotLoginMgr::SendHolders(const BotInfos& queue)
 
 void PlayerBotLoginMgr::SendHolders(BotPool* pool)
 {
+#ifdef VMANGOS
+    // VMANGOS-TODO: vmangos's Database::AsyncPQuery has a different callback
+    // shape; the database-latency ping is disabled (GetDatabaseDelay reads 0).
+#else
     CharacterDatabase.AsyncPQuery(&RandomPlayerbotMgr::DatabasePing, sWorld.GetCurrentMSTime(), std::string("CharacterDatabase"), "select 1");
+#endif
 
     for (auto& [guid, info] : *pool)
     {

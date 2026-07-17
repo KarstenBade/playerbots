@@ -103,7 +103,11 @@ void BossFocusManager::RespawnFocusMob()
 void BossFocusManager::EngageFocusMob(Creature* focusMob)
 {
     // Disable leashing
+#ifdef VMANGOS
+    // VMANGOS-TODO: vmangos has no CombatManager leash control.
+#else
     focusMob->GetCombatManager().SetLeashingDisable(true);
+#endif
 
     // Ensure boss attacks bot
     if (focusMob->AI() && !focusMob->GetVictim())

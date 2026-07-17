@@ -28,7 +28,11 @@ namespace ai
                 
                 if (!totemIsInRange) continue;
 
+#ifdef VMANGOS
+                Unit* totemOwner = totem->GetOwner();
+#else
                 Unit* totemOwner = totem->GetCreator(totem);
+#endif
                 if (!totemOwner)
                     continue;
 

@@ -250,7 +250,12 @@ int AhBot::Answer(int auction, Category* category, ItemBag* inAuctionItems)
 
     int answered = 0;
     AuctionHouseObject* auctionHouse = sAuctionMgr.GetAuctionsMap(ahEntry);
-    const AuctionHouseObject::AuctionEntryMap& auctionEntryMap = auctionHouse->GetAuctions();
+    const AuctionHouseObject::AuctionEntryMap& auctionEntryMap =
+#ifdef VMANGOS
+        *auctionHouse->GetAuctions(); // vmangos returns a pointer
+#else
+        auctionHouse->GetAuctions();
+#endif
     int64 availableMoney = GetAvailableMoney(auctionIds[auction]);
 
     std::vector<AuctionEntry*> entries = LoadAuctions(auctionEntryMap, category, auction);
@@ -705,7 +710,12 @@ void AhBot::Expire(int auction)
 
     AuctionHouseObject* auctionHouse = sAuctionMgr.GetAuctionsMap(ahEntry);
 
-    AuctionHouseObject::AuctionEntryMap const& auctions = auctionHouse->GetAuctions();
+    AuctionHouseObject::AuctionEntryMap const& auctions =
+#ifdef VMANGOS
+        *auctionHouse->GetAuctions(); // vmangos returns a pointer
+#else
+        auctionHouse->GetAuctions();
+#endif
     AuctionHouseObject::AuctionEntryMap::const_iterator itr = auctions.begin();
 
     int count = 0;
@@ -733,7 +743,12 @@ void AhBot::PrintStats(int auction)
         return;
 
     AuctionHouseObject* auctionHouse = sAuctionMgr.GetAuctionsMap(ahEntry);
-    AuctionHouseObject::AuctionEntryMap const& auctions = auctionHouse->GetAuctions();
+    AuctionHouseObject::AuctionEntryMap const& auctions =
+#ifdef VMANGOS
+        *auctionHouse->GetAuctions(); // vmangos returns a pointer
+#else
+        auctionHouse->GetAuctions();
+#endif
 
     sLog.outString("%lu auctions available on auction house %d", auctions.size(), auctionIds[auction]);
 }
@@ -1092,7 +1107,12 @@ void AhBot::CheckSendMail(uint32 bidder, uint32 price, AuctionEntry *entry)
         return;
 
     AuctionHouseObject* auctionHouse = sAuctionMgr.GetAuctionsMap(ahEntry);
-    const AuctionHouseObject::AuctionEntryMap& auctionEntryMap = auctionHouse->GetAuctions();
+    const AuctionHouseObject::AuctionEntryMap& auctionEntryMap =
+#ifdef VMANGOS
+        *auctionHouse->GetAuctions(); // vmangos returns a pointer
+#else
+        auctionHouse->GetAuctions();
+#endif
     for (AuctionHouseObject::AuctionEntryMap::const_iterator itr = auctionEntryMap.begin(); itr != auctionEntryMap.end(); ++itr)
     {
         AuctionEntry *otherEntry = itr->second;

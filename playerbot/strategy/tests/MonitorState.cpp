@@ -114,6 +114,11 @@ bool MonitorStateStarterGearCount::IsConditionMet(const std::string& monitorStr,
 
     uint32 packed = bot->GetUInt32Value(UNIT_FIELD_BYTES_0) & 0x00FFFFFF;
     std::set<uint32> starterItems;
+#ifdef VMANGOS
+    // VMANGOS-TODO: vmangos doesn't load CharStartOutfit.dbc; the starter-item
+    // exclusion set stays empty for this monitor.
+    (void)packed;
+#else
     for (uint32 i = 0; i < sCharStartOutfitStore.GetNumRows(); ++i)
     {
         CharStartOutfitEntry const* entry = sCharStartOutfitStore.LookupEntry(i);
@@ -127,6 +132,7 @@ bool MonitorStateStarterGearCount::IsConditionMet(const std::string& monitorStr,
         }
         break;
     }
+#endif
 
     uint32 count = 0;
     for (uint8 slot = 0; slot < EQUIPMENT_SLOT_END; ++slot)

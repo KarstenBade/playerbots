@@ -89,7 +89,12 @@ bool LfgJoinAction::SetRoles()
 
 bool LfgJoinAction::JoinLFG()
 {
-#ifdef MANGOSBOT_ZERO
+#if defined(MANGOSBOT_ZERO) && defined(VMANGOS)
+    // VMANGOS-TODO: vmangos's LFGQueue has no meeting-stone dungeon
+    // enumeration (MeetingStoneSet/GetDungeonsForPlayer) and no
+    // sLFGMgr.AddToQueue; bots don't self-join the meeting-stone LFG queue.
+    return false;
+#elif defined(MANGOSBOT_ZERO)
     //ItemCountByQuality visitor;
     //IterateItems(&visitor, ITERATE_ITEMS_IN_EQUIP);
     //bool raid = (urand(0, 100) < 50 && visitor.count[ITEM_QUALITY_EPIC] >= 5 && (bot->GetLevel() == 60 || bot->GetLevel() == 70 || bot->GetLevel() == 80));

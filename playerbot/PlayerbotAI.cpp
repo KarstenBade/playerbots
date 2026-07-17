@@ -348,7 +348,11 @@ void PlayerbotAI::UpdateAI(uint32 elapsed, bool minimal)
                 // release loot if moving and far from object.
                 if (shouldRelease)
                 {
+#ifdef VMANGOS
+                    bot->GetSession()->DoLootRelease(bot->GetLootGuid());
+#else
                     loot->Release(bot);
+#endif
                 }
             }
         }
@@ -1185,7 +1189,12 @@ void PlayerbotAI::UpdateAIInternal(uint32 elapsed, bool minimal)
     {
         WorldSession* botWorldSessionPtr = bot->GetSession();
         bool logout = botWorldSessionPtr->ShouldLogOut(time(nullptr));
+#ifdef VMANGOS
+        // vmangos has no session state machine; a master with a session is ready.
+        if (!master)
+#else
         if (!master || master->GetSession()->GetState() != WORLD_SESSION_STATE_READY)
+#endif
             logout = true;
 
         if (bot->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_RESTING) || bot->IsTaxiFlying() ||
@@ -1910,7 +1919,11 @@ void PlayerbotAI::HandleBotOutgoingPacket(const WorldPacket& packet)
         }
 
         // set fall height for fall damage calculations
+#ifdef VMANGOS
+        bot->SetFallInformation(maxHeight);
+#else
         bot->SetFallInformation(0, maxHeight);
+#endif
 
         // fix height
         if (goodLanding)
@@ -2477,7 +2490,7 @@ bool PlayerbotAI::PlayEmote(uint32 emote)
     data << (TextEmotes)emote;
     data << urand(0, EmoteAction::GetNumberOfEmoteVariants((TextEmotes)emote, bot->getRace(), bot->getGender()) - 1);
     data << ((master && (sServerFacade.GetDistance2d(bot, master) < 30.0f) && urand(0, 1)) ? master->GetObjectGuid() : (bot->GetSelectionGuid() && urand(0, 1)) ? bot->GetSelectionGuid() : ObjectGuid());
-    bot->GetSession()->HandleTextEmoteOpcode(data);
+    bot->GetSession()->HandleTextEmoteOpcode(BOT_TYPED_PACKET(WorldPackets::Misc::TextEmote, data));
 
     return false;
 }
@@ -4736,7 +4749,11 @@ bool PlayerbotAI::CastSpell(uint32 spellId, Unit* target, Item* itemTarget, bool
                     obj->SetOwnerGuid(bot->GetObjectGuid());
                     obj->SetLootState(GO_JUST_DEACTIVATED);
 
+#ifdef VMANGOS
+                    bot->RemoveGameObject(obj, false);
+#else
                     bot->RemoveGameObject(obj, false, pSpellInfo->Id != obj->GetSpellId());
+#endif
                     bot->m_ObjectSlotGuid[slot].Clear();
 
                     obj->SetOwnerGuid(ownerGuid);
@@ -4974,7 +4991,11 @@ bool PlayerbotAI::CastSpell(uint32 spellId, float x, float y, float z, Item* ite
 
     ObjectGuid oldSel = bot->GetSelectionGuid();
 
+#ifdef VMANGOS
+    if (!sServerFacade.isMoving(bot)) sServerFacade.SetFacingTo(bot, bot->GetAngle(x, y));
+#else
     if (!sServerFacade.isMoving(bot)) sServerFacade.SetFacingTo(bot, bot->GetAngleAt(bot->GetPositionX(), bot->GetPositionY(), x, y));
+#endif
 
     if (failWithDelay)
     {
@@ -5126,7 +5147,7 @@ bool PlayerbotAI::CastPetSpell(uint32 spellId, Unit* target)
         data << pet->GetObjectGuid();
         data << command;
         data << (target ? target->GetObjectGuid() : ObjectGuid());
-        bot->GetSession()->HandlePetAction(data);
+        bot->GetSession()->HandlePetAction(BOT_TYPED_PACKET(WorldPackets::Pet::PetAction, data));
         return true;
     }
 
@@ -5681,7 +5702,11 @@ bool PlayerbotAI::HasSpellItems(uint32 spellId, const Item* castItem) const
         }
         else
         {
+#ifdef VMANGOS
+            if (true) // VMANGOS-TODO: no reagent-free cast state on vmangos Player
+#else
             if (!bot->CanNoReagentCast(spellEntry))
+#endif
             {
                 for (uint32 i = 0; i < MAX_SPELL_REAGENTS; ++i)
                 {
@@ -6850,8 +6875,8 @@ float PlayerbotAI::GetRange(std::string type)
 //Copy from reputation GetFactionReaction
 ReputationRank PlayerbotAI::GetFactionReaction(FactionTemplateEntry const* thisTemplate, FactionTemplateEntry const* otherTemplate)
 {
-    MANGOS_ASSERT(thisTemplate)
-        MANGOS_ASSERT(otherTemplate)
+    MANGOS_ASSERT(thisTemplate);
+    MANGOS_ASSERT(otherTemplate);
 
         // Original logic begins
 
@@ -6907,7 +6932,11 @@ bool PlayerbotAI::AddAura(Unit* unit, uint32 spellId)
         return false;
     }
 
+#ifdef VMANGOS
+    SpellAuraHolder* holder = CreateSpellAuraHolder(spellInfo, unit, unit, unit);
+#else
     SpellAuraHolder* holder = CreateSpellAuraHolder(spellInfo, unit, unit);
+#endif
 
     for (uint32 i = 0; i < MAX_EFFECT_INDEX; ++i)
     {
@@ -6920,7 +6949,11 @@ bool PlayerbotAI::AddAura(Unit* unit, uint32 spellId)
         {
             int32 basePoints = spellInfo->CalculateSimpleValue(SpellEffectIndex(i));
             int32 damage = basePoints;
+#ifdef VMANGOS
+            Aura* aur = CreateAura(spellInfo, SpellEffectIndex(i), &damage, holder, unit);
+#else
             Aura* aur = CreateAura(spellInfo, SpellEffectIndex(i), &damage, &basePoints, holder, unit);
+#endif
             holder->AddAura(aur, SpellEffectIndex(i));
         }
     }
@@ -7805,7 +7838,11 @@ void PlayerbotAI::AccelerateRespawn(Creature* creature, float accelMod)
         if (cinfo->CorpseDelay)
             defaultDelay = cinfo->CorpseDelay;
 #endif
+#ifdef VMANGOS
+        else if (false) // VMANGOS-TODO: no dungeon-encounter registry on vmangos
+#else
         else if (sObjectMgr.IsEncounter(creature->GetEntry(), creature->GetMapId()))
+#endif
         {
             // encounter boss forced decay timer to 1h
             defaultDelay = 3600;                               // TODO: maybe add that to config file
@@ -8540,7 +8577,7 @@ void PlayerbotAI::StopMoving()
     data << bot->GetObjectGuid().WriteAsPacked();
 #endif
     data << mInfo;
-    bot->GetSession()->HandleMovementOpcodes(data);
+    bot->GetSession()->HandleMovementOpcodes(BOT_TYPED_PACKET(WorldPackets::Movement::MovementPacket, data));
 
     if (bot->GetMotionMaster()->GetCurrentMovementGeneratorType())
     {

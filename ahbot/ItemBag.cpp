@@ -197,7 +197,12 @@ void InAuctionItemsBag::Load()
         return;
 
     AuctionHouseObject* auctionHouse = sAuctionMgr.GetAuctionsMap(ahEntry);
-    AuctionHouseObject::AuctionEntryMap const& auctionEntryMap = auctionHouse->GetAuctions();
+    AuctionHouseObject::AuctionEntryMap const& auctionEntryMap =
+#ifdef VMANGOS
+        *auctionHouse->GetAuctions(); // vmangos returns a pointer
+#else
+        auctionHouse->GetAuctions();
+#endif
     for (AuctionHouseObject::AuctionEntryMap::const_iterator itr = auctionEntryMap.begin(); itr != auctionEntryMap.end(); ++itr)
     {
         ItemPrototype const* proto = sObjectMgr.GetItemPrototype(itr->second->itemTemplate);

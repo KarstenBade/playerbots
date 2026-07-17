@@ -370,6 +370,9 @@ bool RandomPlayerbotFactory::CreateRandomBot(uint8 cls, uint8 inputRace)
 #endif
 	//TODO vector crash on cmangos TWO when creating one of the first bot characters, need a fix
 
+#ifdef VMANGOS
+	WorldSession* session = new WorldSession(accountId, nullptr, SEC_PLAYER, 0, LOCALE_enUS);
+#else
 	WorldSession* session = new WorldSession(accountId, NULL, SEC_PLAYER,
 
 #ifdef MANGOSBOT_TWO
@@ -381,6 +384,7 @@ bool RandomPlayerbotFactory::CreateRandomBot(uint8 cls, uint8 inputRace)
 #ifdef MANGOSBOT_ZERO
         0, LOCALE_enUS, "", 0);
 #endif
+#endif
 
     session->SetNoAnticheat();
 
@@ -390,12 +394,22 @@ bool RandomPlayerbotFactory::CreateRandomBot(uint8 cls, uint8 inputRace)
         sLog.outError("BOTS: Unable to create session or player for random acc %d - name: \"%s\"; race: %u; class: %u", accountId, name.c_str(), race, cls);
         return false;
     }
+#ifdef VMANGOS
+	// vmangos Create has no trailing outfitId parameter.
+	if (!player->Create(sObjectMgr.GeneratePlayerLowGuid(), name, race, cls, gender,
+	        face.second, // skinColor,
+	        face.first,
+	        hair.first,
+	        hair.second, // hairColor,
+	        facialHair))
+#else
 	if (!player->Create(sObjectMgr.GeneratePlayerLowGuid(), name, race, cls, gender,
 	        face.second, // skinColor,
 	        face.first,
 	        hair.first,
 	        hair.second, // hairColor,
 	        facialHair, 0))
+#endif
     {
         player->DeleteFromDB(player->GetObjectGuid(), accountId, true, true);
         delete session;

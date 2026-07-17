@@ -169,7 +169,12 @@ bool AhBidAction::ExecuteCommand(Player* requester, std::string text, Unit* auct
     if (!auctionHouse)
         return false;
 
-    AuctionHouseObject::AuctionEntryMap const& map = auctionHouse->GetAuctions();
+    AuctionHouseObject::AuctionEntryMap const& map =
+#ifdef VMANGOS
+        *auctionHouse->GetAuctions(); // vmangos returns a pointer
+#else
+        auctionHouse->GetAuctions();
+#endif
 
     if (map.empty())
         return false;

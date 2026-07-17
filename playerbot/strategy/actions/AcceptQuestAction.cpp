@@ -134,8 +134,11 @@ bool AcceptQuestShareAction::Execute(Event& event)
 #ifdef MANGOS
                     true
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
                     (uint32)0
+#endif
+#ifdef VMANGOS
+                    false
 #endif
             );
         }
@@ -185,8 +188,11 @@ bool ConfirmQuestAction::Execute(Event& event)
 #ifdef MANGOS
                     true
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
                     (uint32)0
+#endif
+#ifdef VMANGOS
+                    false
 #endif
             );
         }
@@ -235,8 +241,11 @@ bool QuestDetailsAction::Execute(Event& event)
 #ifdef MANGOS
                 true
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
                 (uint32)0
+#endif
+#ifdef VMANGOS
+                false
 #endif
             );
         }

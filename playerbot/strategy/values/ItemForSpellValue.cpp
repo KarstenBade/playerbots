@@ -11,13 +11,14 @@ inline int strcmpi(const char* s1, const char* s2)
     for (; *s1 && *s2 && (toupper(*s1) == toupper(*s2)); ++s1, ++s2);
     return *s1 - *s2;
 }
+#endif
 #ifdef VMANGOS
-// vmangos SpellEntry::SpellName elements are std::string.
+// vmangos SpellEntry::SpellName elements are std::string (the char* strcmpi
+// comes from the CRT on Windows and the fallback above elsewhere).
 inline int strcmpi(const std::string& s1, const char* s2)
 {
     return strcmpi(s1.c_str(), s2);
 }
-#endif
 #endif
 
 Item* ItemForSpellValue::Calculate()

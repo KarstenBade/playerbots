@@ -791,7 +791,12 @@ void RandomPlayerbotMgr::UpdateAIInternal(uint32 elapsed, bool minimal)
     }
 
     //Ping character database.
+#ifdef VMANGOS
+    // VMANGOS-TODO: vmangos's Database::AsyncPQuery has a different callback
+    // shape; the database-latency ping is disabled (GetDatabaseDelay reads 0).
+#else
     CharacterDatabase.AsyncPQuery(&RandomPlayerbotMgr::DatabasePing, sWorld.GetCurrentMSTime(), std::string("CharacterDatabase"), "SELECT 1");
+#endif
 
     PlayerbotHolder::UpdateAIInternal(elapsed, minimal);
 }
@@ -4271,7 +4276,12 @@ void RandomPlayerbotMgr::MirrorAh()
     {
         AuctionHouseObject* auctionHouse = sAuctionMgr.GetAuctionsMap(house);
 
-        AuctionHouseObject::AuctionEntryMap const& map = auctionHouse->GetAuctions();
+        AuctionHouseObject::AuctionEntryMap const& map =
+#ifdef VMANGOS
+        *auctionHouse->GetAuctions(); // vmangos returns a pointer
+#else
+        auctionHouse->GetAuctions();
+#endif
 
         for (auto& auction : map)
         {

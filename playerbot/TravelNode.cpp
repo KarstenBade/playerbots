@@ -2128,7 +2128,11 @@ void TravelNodeMap::LoadMaps()
 
         uint32 mapId = sMapStore.LookupEntry(i)->MapID;
 
+#ifdef VMANGOS
+        for (const auto& entry : std::filesystem::directory_iterator(sWorld.GetDataPath() + "mmaps"))
+#else
         for (const auto& entry : boost::filesystem::directory_iterator(sWorld.GetDataPath() + "mmaps"))
+#endif
         {
             if (entry.path().extension() == ".mmtile")
             {
