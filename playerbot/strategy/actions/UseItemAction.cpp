@@ -17,6 +17,19 @@ using namespace ai;
 
 constexpr std::string_view LOS_GOS_PARAM = "los gos";
 
+#ifdef VMANGOS
+// VMANGOS-TODO: vmangos's prepare() covers the full cast start; the cmangos
+// lock/reagent cheat bypass (OpenLockCheck/itemCheats) is not replicated.
+SpellCastResult BotUseItemSpell::ForceSpellStart(SpellCastTargets const* targets, Aura* triggeredByAura)
+{
+    return prepare(*targets, triggeredByAura);
+}
+
+bool BotUseItemSpell::OpenLockCheck()
+{
+    return false;
+}
+#else
 SpellCastResult BotUseItemSpell::ForceSpellStart(SpellCastTargets const* targets, Aura* triggeredByAura)
 {
     WorldObject* truecaster = GetTrueCaster();
@@ -145,6 +158,7 @@ bool BotUseItemSpell::OpenLockCheck()
 
     return false;
 }
+#endif // VMANGOS
 
 bool IsFoodOrDrink(const ItemPrototype* proto, uint32 spellCategory)
 {

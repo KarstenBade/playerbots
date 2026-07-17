@@ -9,10 +9,19 @@ namespace ai
     class BotUseItemSpell : public Spell
     {
     public:
+#ifdef VMANGOS
+        // vmangos Spell takes Unit* + bool triggered (TRIGGERED_* map to bool
+        // in the compat header).
+        BotUseItemSpell(Unit* caster, SpellEntry const* info, bool triggered, ObjectGuid originalCasterGUID = ObjectGuid(), SpellEntry const* triggeredBy = nullptr, bool itemCheats = false) : Spell(caster, info, triggered, originalCasterGUID, triggeredBy), itemCheats(itemCheats) {};
+
+        static BotUseItemSpell* Create(Unit* caster, SpellEntry const* info, bool triggeredFlags, ObjectGuid originalCasterGUID = ObjectGuid(), SpellEntry const* triggeredBy = nullptr, bool itemCheats = false)
+        {
+#else
         BotUseItemSpell(WorldObject* caster, SpellEntry const* info, uint32 triggeredFlags, ObjectGuid originalCasterGUID = ObjectGuid(), SpellEntry const* triggeredBy = nullptr, bool itemCheats = false) : Spell(caster, info, triggeredFlags, originalCasterGUID, triggeredBy), itemCheats(itemCheats) {};
 
         static BotUseItemSpell* Create(WorldObject* caster, SpellEntry const* info, uint32 triggeredFlags, ObjectGuid originalCasterGUID = ObjectGuid(), SpellEntry const* triggeredBy = nullptr, bool itemCheats = false)
         {
+#endif
             if (!caster || !info)
                 return nullptr;
 
