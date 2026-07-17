@@ -132,7 +132,11 @@ void TestRegistry::GenerateBossWalkTest()
                 startCommand = ".bot r @tank co + mark rti";
             }
 
+#ifdef VMANGOS
+            std::string bossName = mapEntry->name[0] + std::string("_") + bossInfo->name;
+#else
             std::string bossName = mapEntry->name[0] + std::string("_") + bossInfo->Name;
+#endif
             std::replace(bossName.begin(), bossName.end(), ' ', '_');
             std::replace(bossName.begin(), bossName.end(), '\'', '_');
             std::transform(bossName.begin(), bossName.end(), bossName.begin(), ::tolower);
@@ -235,7 +239,11 @@ void TestRegistry::GenerateBossEncounterTest()
                 startCommand = ".bot r @tank co + mark rti";
             }
 
+#ifdef VMANGOS
+            std::string bossName = mapEntry->name[0] + std::string("_") + bossInfo->name;
+#else
             std::string bossName = mapEntry->name[0] + std::string("_") + bossInfo->Name;
+#endif
             std::replace(bossName.begin(), bossName.end(), ' ', '_');
             std::replace(bossName.begin(), bossName.end(), '\'', '_');
             std::transform(bossName.begin(), bossName.end(), bossName.begin(), ::tolower);
@@ -247,8 +255,13 @@ void TestRegistry::GenerateBossEncounterTest()
                 {"group_size",       maxPlayers                                     },
                 {"instance_entry",   mapName                                        },
                 {"boss_destination", bossCoords.str()                               },
+#ifdef VMANGOS
+                {"boss_entry",       std::to_string(bossInfo->entry)                },
+                {"boss_name",        bossInfo->name                                 }
+#else
                 {"boss_entry",       std::to_string(bossInfo->Entry)                },
                 {"boss_name",        bossInfo->Name                                 }
+#endif
             }));
         }
     }

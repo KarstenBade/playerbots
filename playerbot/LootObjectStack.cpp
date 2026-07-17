@@ -72,7 +72,11 @@ void LootObject::Refresh(Player* bot, ObjectGuid guid, bool debug)
 
         if (creature->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE))
         {
+#ifdef VMANGOS
+            skillId = VmangosGetRequiredLootSkill(creature->GetCreatureInfo());
+#else
             skillId = creature->GetCreatureInfo()->GetRequiredLootSkill();
+#endif
             uint32 targetLevel = creature->GetLevel();
             reqSkillValue = targetLevel < 10 ? 1 : targetLevel < 20 ? (targetLevel - 10) * 10 : targetLevel * 5;
             if (ai->HasSkill((SkillType)skillId) && bot->GetSkillValue(skillId) >= reqSkillValue)

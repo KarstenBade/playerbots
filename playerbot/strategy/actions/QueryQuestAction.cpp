@@ -93,7 +93,11 @@ void QueryQuestAction::TellObjectives(Player* requester, uint32 questId)
             {
                 CreatureInfo const* info = sObjectMgr.GetCreatureTemplate(questTemplate->ReqCreatureOrGOId[i]);
                 if (info)
+#ifdef VMANGOS
+                    TellObjective(requester, info->name, available, required);
+#else
                     TellObjective(requester, info->Name, available, required);
+#endif
             }
         }
     }

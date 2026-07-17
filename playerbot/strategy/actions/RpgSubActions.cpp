@@ -93,7 +93,11 @@ void RpgHelper::resetFacing(GuidPosition guidPosition)
 
     if (data)
     {
+#ifdef VMANGOS
+        unit->SetFacingTo(data->position.o);
+#else
         unit->SetFacingTo(data->orientation);
+#endif
         sRandomPlayerbotMgr.AddFacingFix(bot->GetMapId(),bot->GetInstanceId(), guidPosition);
     }
 }

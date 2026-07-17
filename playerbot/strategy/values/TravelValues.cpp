@@ -74,8 +74,13 @@ EntryTravelPurposeMap EntryTravelPurposeMapValue::Calculate()
         if (!cInfo)
             continue;
 
+#ifdef VMANGOS
+        if (cInfo->flags_extra & CREATURE_FLAG_EXTRA_INVISIBLE)
+            continue;
+#else
         if (cInfo->ExtraFlags & CREATURE_EXTRA_FLAG_INVISIBLE)
             continue;
+#endif
 
         DestinationPurose purpose = 0;
 
@@ -128,9 +133,15 @@ EntryTravelPurposeMap EntryTravelPurposeMapValue::Calculate()
             }
         }
 
+#ifdef VMANGOS
+        if (cInfo->rank == CREATURE_ELITE_ELITE || cInfo->rank == CREATURE_ELITE_RAREELITE || cInfo->rank == CREATURE_ELITE_WORLDBOSS || cInfo->rank == CREATURE_ELITE_RARE)
+        {
+            if (cInfo->rank == 1)
+#else
         if (cInfo->Rank == CREATURE_ELITE_ELITE || cInfo->Rank == CREATURE_ELITE_RAREELITE || cInfo->Rank == CREATURE_ELITE_WORLDBOSS || cInfo->Rank == CREATURE_ELITE_RARE)
         {
             if (cInfo->Rank == 1)
+#endif
             {
                 if (guidpMap[entry].size() == 1)
                     purpose |= (uint32)TravelDestinationPurpose::Boss;
@@ -139,7 +150,11 @@ EntryTravelPurposeMap EntryTravelPurposeMapValue::Calculate()
                 purpose |= (uint32)TravelDestinationPurpose::Boss;
         }
 
+#ifdef VMANGOS
+        if (cInfo->SkinningLootId && VmangosGetRequiredLootSkill(cInfo) == SKILL_SKINNING)
+#else
         if (cInfo->SkinningLootId && cInfo->GetRequiredLootSkill() == SKILL_SKINNING)
+#endif
         {
             purpose |= (uint32)TravelDestinationPurpose::GatherSkinning;
         }
@@ -165,8 +180,13 @@ EntryTravelPurposeMap EntryTravelPurposeMapValue::Calculate()
         if (!gInfo)
             continue;
 
+#ifndef VMANGOS
         if (gInfo->ExtraFlags & CREATURE_EXTRA_FLAG_INVISIBLE)
             continue;
+#endif
+        // VMANGOS-TODO: vmangos's GameObjectInfo has no generic extra-flags
+        // field (this cmangos check appears to test the wrong struct type
+        // upstream); nothing to skip here under VMANGOS.
 
         uint32 purpose = 0;
 
@@ -215,7 +235,11 @@ uint32 EntryTravelPurposeMapValue::SkillIdToGatherEntry(int32 entry)
         if (!cInfo->SkinningLootId)
             return 0;
 
+#ifdef VMANGOS
+        return VmangosGetRequiredLootSkill(cInfo);
+#else
         return cInfo->GetRequiredLootSkill();
+#endif
     }
     else
     {

@@ -1045,10 +1045,17 @@ void RandomPlayerbotMgr::DelayedFacingFix()
                     if (!data)
                         continue;
 
+#ifdef VMANGOS
+                    if (unit->GetOrientation() == data->position.o)
+                        continue;
+
+                    unit->SetFacingTo(data->position.o);
+#else
                     if (unit->GetOrientation() == data->orientation)
                         continue;
 
                     unit->SetFacingTo(data->orientation);
+#endif
                 }
             }
         }
@@ -1385,21 +1392,31 @@ void RandomPlayerbotMgr::LoadBattleMastersCache()
 #ifdef MANGOS
         FactionTemplateEntry const* bmFaction = sFactionTemplateStore.LookupEntry(bmaster->FactionAlliance);
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
         FactionTemplateEntry const* bmFaction = sFactionTemplateStore.LookupEntry(bmaster->Faction);
+#endif
+#ifdef VMANGOS
+        FactionTemplateEntry const* bmFaction = sFactionTemplateStore.LookupEntry(bmaster->faction);
 #endif
         uint32 bmFactionId = bmFaction->faction;
 #ifdef MANGOS
         FactionEntry const* bmParentFaction = sFactionStore.LookupEntry(bmFactionId);
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
 #ifdef MANGOSBOT_ONE
         FactionEntry const* bmParentFaction = sFactionStore.LookupEntry<FactionEntry>(bmFactionId);
 #else
         FactionEntry const* bmParentFaction = sFactionStore.LookupEntry(bmFactionId);
 #endif
 #endif
+#ifdef VMANGOS
+        // VMANGOS-TODO: vmangos never loads Faction.dbc; sFactionStore is a stub
+        // returning nullptr, so team is always TEAM_BOTH_ALLOWED here.
+        FactionEntry const* bmParentFaction = sFactionStore.LookupEntry(bmFactionId);
+        uint32 bmParentTeam = bmParentFaction ? bmParentFaction->team : 0;
+#else
         uint32 bmParentTeam = bmParentFaction->team;
+#endif
         Team bmTeam = TEAM_BOTH_ALLOWED;
         if (bmParentTeam == 891)
             bmTeam = ALLIANCE;
@@ -2868,13 +2885,22 @@ void RandomPlayerbotMgr::PrepareTeleportCache()
     //Creatures.
     for (auto& creatureData : WorldPosition().getCreaturesNear(0, 0))
     {
+#ifdef VMANGOS
+        CreatureInfo const* cInfo = VMANGOS_GET_CREATURE_TEMPLATE(creatureData->second.creature_id[0]);
+#else
         CreatureInfo const* cInfo = VMANGOS_GET_CREATURE_TEMPLATE(creatureData->second.id);
+#endif
 
         if (!cInfo)
             continue;
 
+#ifdef VMANGOS
+        if (cInfo->flags_extra & CREATURE_FLAG_EXTRA_INVISIBLE)
+            continue;
+#else
         if (cInfo->ExtraFlags & CREATURE_EXTRA_FLAG_INVISIBLE)
             continue;
+#endif
 
         std::vector<uint32> allowedNpcFlags;
 
@@ -4104,7 +4130,11 @@ uint32 RandomPlayerbotMgr::GetBattleMasterEntry(Player* bot, BattleGroundTypeId 
 
         CreatureData const* data = &dataPair->second;
 
+#ifdef VMANGOS
+        Unit* Bm = sMapMgr.FindMap((uint32)data->position.mapId)->GetUnit(ObjectGuid(HIGHGUID_UNIT, *i, dataPair->first));
+#else
         Unit* Bm = sMapMgr.FindMap((uint32)data->mapid)->GetUnit(ObjectGuid(HIGHGUID_UNIT, *i, dataPair->first));
+#endif
         if (!Bm)
             continue;
 
@@ -4130,7 +4160,11 @@ uint32 RandomPlayerbotMgr::GetBattleMasterEntry(Player* bot, BattleGroundTypeId 
         if (Bm->GetDeathState() == DEAD)
             continue;
 
+#ifdef VMANGOS
+        float dist2 = sServerFacade.GetDistance2d(bot, data->position.x, data->position.y);
+#else
         float dist2 = sServerFacade.GetDistance2d(bot, data->posX, data->posY);
+#endif
         if (dist2 < dist1)
         {
             dist1 = dist2;

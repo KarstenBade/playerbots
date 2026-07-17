@@ -2554,9 +2554,15 @@ PositionTarget DebugAction::ParseLocation(const std::string& param, Player* bot)
     {
         result.valid = true;
         result.mapId = tele->mapId;
+#ifdef VMANGOS
+        result.x = tele->x;
+        result.y = tele->y;
+        result.z = tele->z;
+#else
         result.x = tele->position_x;
         result.y = tele->position_y;
         result.z = tele->position_z;
+#endif
         result.name = param;
         return result;
     }
@@ -3335,8 +3341,13 @@ bool DebugAction::HandleNPC(Event& event, Player* requester, const std::string& 
     std::ostringstream out2;
     FactionTemplateEntry const* requestFaction = sFactionTemplateStore.LookupEntry(requester->GetFaction());
     FactionTemplateEntry const* objectFaction = nullptr;
+#ifdef VMANGOS
+    if(guidP.GetCreatureTemplate() && guidP.GetCreatureTemplate()->faction)
+        objectFaction = sFactionTemplateStore.LookupEntry(guidP.GetCreatureTemplate()->faction);
+#else
     if(guidP.GetCreatureTemplate() && guidP.GetCreatureTemplate()->Faction)
         objectFaction = sFactionTemplateStore.LookupEntry(guidP.GetCreatureTemplate()->Faction);
+#endif
     FactionTemplateEntry const* humanFaction = sFactionTemplateStore.LookupEntry(1);
     FactionTemplateEntry const* orcFaction = sFactionTemplateStore.LookupEntry(2);
 
@@ -3357,7 +3368,11 @@ bool DebugAction::HandleNPC(Event& event, Player* requester, const std::string& 
         ReputationRank reactionHum = PlayerbotAI::GetFactionReaction(humanFaction, objectFaction);
         ReputationRank reactionOrc = PlayerbotAI::GetFactionReaction(orcFaction, objectFaction);
 
+#ifdef VMANGOS
+        out2 << " faction:" << guidP.GetCreatureTemplate()->faction << " reaction me: " << rep[reactionRequest] << ",alliance: " << rep[reactionHum] << " ,horde: " << rep[reactionOrc];
+#else
         out2 << " faction:" << guidP.GetCreatureTemplate()->Faction << " reaction me: " << rep[reactionRequest] << ",alliance: " << rep[reactionHum] << " ,horde: " << rep[reactionOrc];
+#endif
     }
 
     ai->TellPlayerNoFacing(requester, out2);
@@ -3881,7 +3896,11 @@ bool DebugAction::HandlePrintTravel(Event& event, Player* requester, const std::
                 else if (type != typeid(ExploreTravelDestination))
                 {
                     if (((EntryTravelDestination*)dest)->GetCreatureInfo())
+#ifdef VMANGOS
+                        out << ((EntryTravelDestination*)dest)->GetCreatureInfo()->name;
+#else
                         out << ((EntryTravelDestination*)dest)->GetCreatureInfo()->Name;
+#endif
                     else if (((EntryTravelDestination*)dest)->GetGoInfo())
                         out << ((EntryTravelDestination*)dest)->GetGoInfo()->name;
                     else

@@ -58,11 +58,19 @@ void TravelNodePath::calculateCost(bool distanceOnly)
                 for (auto& creaturePair : point.getCreaturesNear(50)) //Agro radius + 5
                 {
                     CreatureData const cData = creaturePair->second;
+#ifdef VMANGOS
+                    CreatureInfo const* cInfo = VMANGOS_GET_CREATURE_TEMPLATE(cData.creature_id[0]);
+#else
                     CreatureInfo const* cInfo = VMANGOS_GET_CREATURE_TEMPLATE(cData.id);
+#endif
 
                     if (cInfo)
                     {
+#ifdef VMANGOS
+                        FactionTemplateEntry const* factionEntry = sFactionTemplateStore.LookupEntry(cInfo->faction);
+#else
                         FactionTemplateEntry const* factionEntry = sFactionTemplateStore.LookupEntry(cInfo->Faction);
+#endif
 
                         if (aReact.find(factionEntry) == aReact.end())
                             aReact.insert(std::make_pair(factionEntry, PlayerbotAI::friendToAlliance(factionEntry)));
@@ -72,12 +80,21 @@ void TravelNodePath::calculateCost(bool distanceOnly)
                             hReact.insert(std::make_pair(factionEntry, PlayerbotAI::friendToHorde(factionEntry)));
                         hFriend = hReact.find(factionEntry)->second;
 
+#ifdef VMANGOS
+                        if (maxLevelCreature[0] < cInfo->level_max && !aFriend && !hFriend)
+                            maxLevelCreature[0] = cInfo->level_max;
+                        if (maxLevelCreature[1] < cInfo->level_max && aFriend && !hFriend)
+                            maxLevelCreature[1] = cInfo->level_max;
+                        if (maxLevelCreature[2] < cInfo->level_max && !aFriend && hFriend)
+                            maxLevelCreature[2] = cInfo->level_max;
+#else
                         if (maxLevelCreature[0] < cInfo->MaxLevel && !aFriend && !hFriend)
                             maxLevelCreature[0] = cInfo->MaxLevel;
                         if (maxLevelCreature[1] < cInfo->MaxLevel && aFriend && !hFriend)
                             maxLevelCreature[1] = cInfo->MaxLevel;
                         if (maxLevelCreature[2] < cInfo->MaxLevel && !aFriend && hFriend)
                             maxLevelCreature[2] = cInfo->MaxLevel;
+#endif
                     }
                 }
 
@@ -124,6 +141,15 @@ float TravelNodePath::getCost(Unit* unit, uint32 cGold)
             uint32 triggerId = getPathObject();
             AreaTriggerEntry const* atEntry = sAreaTriggerStore.LookupEntry(pathObject);
             AreaTrigger const* at = sObjectMgr.GetAreaTrigger(pathObject);
+#ifdef VMANGOS
+            if (atEntry && at && atEntry->map_id == bot->GetMapId())
+            {
+                Map* map = WorldPosition(atEntry->map_id, atEntry->box_x, atEntry->box_y, atEntry->box_z).getMap(bot->GetInstanceId());
+                if (map)
+                    if (at && at->condition_id && !sObjectMgr.IsConditionSatisfied(at->condition_id, bot, map, nullptr, CONDITION_FROM_AREATRIGGER_TELEPORT))
+                        return -1;
+            }
+#else
             if (atEntry && at && atEntry->mapid == bot->GetMapId())
             {
                 Map* map = WorldPosition(atEntry->mapid, atEntry->box_x, atEntry->box_y, atEntry->box_z).getMap(bot->GetInstanceId());
@@ -131,6 +157,7 @@ float TravelNodePath::getCost(Unit* unit, uint32 cGold)
                     if (at && at->conditionId && !sObjectMgr.IsConditionSatisfied(at->conditionId, bot, map, nullptr, CONDITION_FROM_AREATRIGGER_TELEPORT))
                         return -1;
             }
+#endif
         }
 
         if (getPathType() == TravelNodePathType::staticPortal && pathObject)
@@ -244,7 +271,11 @@ uint32 TravelNode::getAreaTriggerId()
         if (!atEntry)
             continue;
 
+#ifdef VMANGOS
+        WorldPosition inPos = WorldPosition(atEntry->map_id, atEntry->x, atEntry->y, atEntry->z - 4.0f, 0);
+#else
         WorldPosition inPos = WorldPosition(atEntry->mapid, atEntry->x, atEntry->y, atEntry->z - 4.0f, 0);
+#endif
 
         if (*getPosition() == inPos)
             return link.second->getPathObject();
@@ -268,7 +299,12 @@ bool TravelNode::isAreaTriggerTarget(uint32 areaTriggerId)
         if (!at)
             continue;
 
+#ifdef VMANGOS
+        WorldLocation atDest = VmangosAreaTriggerDest(i);
+        WorldPosition outPos = WorldPosition(atDest.mapId, atDest.x, atDest.y, atDest.z, atDest.o);
+#else
         WorldPosition outPos = WorldPosition(at->target_mapId, at->target_X, at->target_Y, at->target_Z, at->target_Orientation);
+#endif
 
         if (*getPosition() == outPos)
             return true;
@@ -2143,6 +2179,21 @@ void TravelNodeMap::generateNpcNodes()
 
             TravelNode* node = sTravelNodeMap.addNode(guidP, nodeName, true, true);
         }
+#ifdef VMANGOS
+        else if (cInfo->rank == 3)
+        {
+            std::string nodeName = cInfo->name;
+
+            sTravelNodeMap.addNode(guidP, nodeName, true, true);
+        }
+        else if (cInfo->rank == 1 && !guidP.isOverworld())
+        {
+            if (bossMap.find(cInfo->entry) == bossMap.end())
+                bossMap[cInfo->entry] = guidP;
+            else if (bossMap[cInfo->entry])
+                bossMap[cInfo->entry] = GuidPosition();
+        }
+#else
         else if (cInfo->Rank == 3)
         {
             std::string nodeName = cInfo->Name;
@@ -2156,6 +2207,7 @@ void TravelNodeMap::generateNpcNodes()
             else if (bossMap[cInfo->Entry])
                 bossMap[cInfo->Entry] = GuidPosition();
         }
+#endif
     }
 
     for (auto boss : bossMap)
@@ -2170,7 +2222,11 @@ void TravelNodeMap::generateNpcNodes()
         if (!cInfo)
             continue;
 
+#ifdef VMANGOS
+        std::string nodeName = cInfo->name;
+#else
         std::string nodeName = cInfo->Name;
+#endif
 
         sTravelNodeMap.addNode(guidP, nodeName, true, true);
     }
@@ -2227,9 +2283,16 @@ void TravelNodeMap::generateAreaTriggerNodes()
         if (!at)
             continue;
 
+#ifdef VMANGOS
+        WorldPosition inPos = WorldPosition(atEntry->map_id, atEntry->x, atEntry->y, atEntry->z - 4.0f, 0);
+
+        WorldLocation atDest = VmangosAreaTriggerDest(i);
+        WorldPosition outPos = WorldPosition(atDest.mapId, atDest.x, atDest.y, atDest.z, atDest.o);
+#else
         WorldPosition inPos = WorldPosition(atEntry->mapid, atEntry->x, atEntry->y, atEntry->z - 4.0f, 0);
 
         WorldPosition outPos = WorldPosition(at->target_mapId, at->target_X, at->target_Y, at->target_Z, at->target_Orientation);
+#endif
 
         std::string nodeName;
 
@@ -2255,9 +2318,16 @@ void TravelNodeMap::generateAreaTriggerNodes()
         if (!at)
             continue;
 
+#ifdef VMANGOS
+        WorldPosition inPos = WorldPosition(atEntry->map_id, atEntry->x, atEntry->y, atEntry->z - 4.0f, 0);
+
+        WorldLocation atDest = VmangosAreaTriggerDest(i);
+        WorldPosition outPos = WorldPosition(atDest.mapId, atDest.x, atDest.y, atDest.z, atDest.o);
+#else
         WorldPosition inPos = WorldPosition(atEntry->mapid, atEntry->x, atEntry->y, atEntry->z - 4.0f, 0);
 
         WorldPosition outPos = WorldPosition(at->target_mapId, at->target_X, at->target_Y, at->target_Z, at->target_Orientation);
+#endif
 
         std::string nodeName;
 

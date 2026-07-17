@@ -31,10 +31,17 @@ bool SetAvoidAreaAction::Execute(Event& event)
         if (cInfo->NpcFlags > 0) //Ignore npcs.
             continue;
 
+#ifdef VMANGOS
+        if (cInfo->level_max < bot->GetLevel() - 3) //Ignore lower level mobs.
+            continue;
+
+        FactionTemplateEntry const* factionEntry = sFactionTemplateStore.LookupEntry(cInfo->faction);
+#else
         if (cInfo->MaxLevel < bot->GetLevel() - 3) //Ignore lower level mobs.
             continue;
 
         FactionTemplateEntry const* factionEntry = sFactionTemplateStore.LookupEntry(cInfo->Faction);
+#endif
         ReputationRank reactionHum = PlayerbotAI::GetFactionReaction(humanFaction, factionEntry);
         ReputationRank reactionOrc = PlayerbotAI::GetFactionReaction(orcFaction, factionEntry);
 

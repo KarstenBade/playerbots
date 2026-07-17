@@ -566,13 +566,20 @@ void PlayerbotFactory::InitPet()
 
 #ifdef MANGOSBOT_TWO
             if (!co->isTameable(bot->CanTameExoticPets()))
+#elif defined(VMANGOS)
+            if (!co->IsTameable())
 #else
             if (!co->isTameable())
 #endif
                 continue;
 
+#ifdef VMANGOS
+            if ((int)co->level_min > (int)bot->GetLevel())
+                continue;
+#else
             if ((int)co->MinLevel > (int)bot->GetLevel())
                 continue;
+#endif
 
 			ids.push_back(id);
 		}
@@ -629,7 +636,11 @@ void PlayerbotFactory::InitPet()
             pet->SetUInt32Value(UNIT_CREATED_BY_SPELL, 13481);
 #endif
 
+#ifdef VMANGOS
+            sLog.outDebug(  "Bot %s: assign pet %d (%d level)", bot->GetName(), co->entry, bot->GetLevel());
+#else
             sLog.outDebug(  "Bot %s: assign pet %d (%d level)", bot->GetName(), co->Entry, bot->GetLevel());
+#endif
             pet->SavePetToDB(PET_SAVE_AS_CURRENT, bot);
             bot->PetSpellInitialize();
             break;
@@ -1162,7 +1173,11 @@ void PlayerbotFactory::InitPetSpells()
             if (!ci)
                 return PET_UNKNOWN;
 
+#ifdef VMANGOS
+            switch (ci->pet_family)
+#else
             switch (ci->Family)
+#endif
             {
                 case 1: return PET_WOLF;
                 case 2: return PET_CAT;
@@ -1928,7 +1943,11 @@ void PlayerbotFactory::InitPetSpells()
             if (!ci)
                 return PET_UNKNOWN;
 
+#ifdef VMANGOS
+            switch (ci->pet_family)
+#else
             switch (ci->Family)
+#endif
             {
                 case 1: return PET_WOLF;
                 case 2: return PET_CAT;
@@ -3992,12 +4011,21 @@ void PlayerbotFactory::InitTradeSkills()
         if (!co)
             continue;
 
+#ifdef VMANGOS
+        if (co->trainer_type != TRAINER_TYPE_TRADESKILLS)
+            continue;
+
+        uint32 trainerId = co->TrainerTemplateId;
+        if (!trainerId)
+            trainerId = co->entry;
+#else
         if (co->TrainerType != TRAINER_TYPE_TRADESKILLS)
             continue;
 
         uint32 trainerId = co->TrainerTemplateId;
         if (!trainerId)
             trainerId = co->Entry;
+#endif
 
         TrainerSpellData const* trainer_spells = sObjectMgr.GetNpcTrainerTemplateSpells(trainerId);
         if (!trainer_spells)

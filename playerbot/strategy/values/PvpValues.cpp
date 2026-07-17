@@ -55,7 +55,11 @@ CreatureDataPair const* BgMasterValue::NearestBm(bool allowDead)
 
     for (auto& bmPair : bmPairs)
     {
+#ifdef VMANGOS
+        ObjectGuid bmGuid(HIGHGUID_UNIT, bmPair->second.creature_id[0], bmPair->first);
+#else
         ObjectGuid bmGuid(HIGHGUID_UNIT, bmPair->second.id, bmPair->first);
+#endif
 
         if (!bmPair)
             continue;
@@ -72,12 +76,20 @@ CreatureDataPair const* BgMasterValue::NearestBm(bool allowDead)
         if (rbmPair && rDist <= dist)
             continue;
 
+#ifdef VMANGOS
+        CreatureInfo const* bmTemplate = VMANGOS_GET_CREATURE_TEMPLATE(bmPair->second.creature_id[0]);
+#else
         CreatureInfo const* bmTemplate = VMANGOS_GET_CREATURE_TEMPLATE(bmPair->second.id);
+#endif
 
         if (!bmTemplate)
             continue;
 
+#ifdef VMANGOS
+        FactionTemplateEntry const* bmFactionEntry = sFactionTemplateStore.LookupEntry(bmTemplate->faction);
+#else
         FactionTemplateEntry const* bmFactionEntry = sFactionTemplateStore.LookupEntry(bmTemplate->Faction);
+#endif
 
         //Is the unit hostile?
         if (ai->getReaction(bmFactionEntry) < REP_NEUTRAL)

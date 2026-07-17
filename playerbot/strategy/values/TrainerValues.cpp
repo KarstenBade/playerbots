@@ -21,8 +21,13 @@ trainableSpellMap* TrainableSpellMapValue::Calculate()
         if (!creatureInfo)
             continue;
 
+#ifdef VMANGOS
+        if (!creatureInfo->trainer_type && !creatureInfo->TrainerClass)
+            continue;
+#else
         if (!creatureInfo->TrainerType && !creatureInfo->TrainerClass)
             continue;
+#endif
 
         if(creatureInfo->TrainerTemplateId)
             trainerTemplateIds[creatureInfo->TrainerTemplateId].push_back(creatureInfo);
@@ -41,7 +46,11 @@ trainableSpellMap* TrainableSpellMapValue::Calculate()
 
         CreatureInfo const* firstTrainer = trainers.front();
 
+#ifdef VMANGOS
+        TrainerType trainerType = (TrainerType)firstTrainer->trainer_type;
+#else
         TrainerType trainerType = (TrainerType)firstTrainer->TrainerType;
+#endif
 
         uint32 spellRequirement;
         if (trainerType == TRAINER_TYPE_CLASS || trainerType == TRAINER_TYPE_PETS)
@@ -101,7 +110,11 @@ trainableSpellMap* TrainableSpellMapValue::Calculate()
             }
 
             for (auto& trainer : trainers)
+#ifdef VMANGOS
+                (*spellMap)[trainerType][spellRequirement][sameTrainerSpell].push_back(trainer->entry);
+#else
                 (*spellMap)[trainerType][spellRequirement][sameTrainerSpell].push_back(trainer->Entry);
+#endif
         }
     }
 

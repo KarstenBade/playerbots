@@ -241,7 +241,11 @@ bool TrainerAction::Execute(Event& event)
     if (spell)
         spells.insert(spell);
 
+#ifdef VMANGOS
+    if (text.find("learn") != std::string::npos || sRandomPlayerbotMgr.IsFreeBot(bot) || (sPlayerbotAIConfig.autoTrainSpells != "no" && (creature->GetCreatureInfo()->trainer_type != TRAINER_TYPE_TRADESKILLS || !ai->HasActivePlayerMaster()))) //Todo rewrite to only exclude start primary profession skills and make config dependent.
+#else
     if (text.find("learn") != std::string::npos || sRandomPlayerbotMgr.IsFreeBot(bot) || (sPlayerbotAIConfig.autoTrainSpells != "no" && (creature->GetCreatureInfo()->TrainerType != TRAINER_TYPE_TRADESKILLS || !ai->HasActivePlayerMaster()))) //Todo rewrite to only exclude start primary profession skills and make config dependent.
+#endif
     {
         if(Iterate(requester, creature, &TrainerAction::Learn, spells))
             context->ClearValues("item usage"); //Bot might be able to use new items.

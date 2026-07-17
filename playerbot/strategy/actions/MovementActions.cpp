@@ -1552,7 +1552,14 @@ bool MovementAction::MoveTo(uint32 mapId, float x, float y, float z, bool idle, 
                     WorldPosition telePos;
                     AreaTrigger const* at = sObjectMgr.GetAreaTrigger(entry);
                     if (at)
+#ifdef VMANGOS
+                    {
+                        WorldLocation atDest = VmangosAreaTriggerDest(entry);
+                        telePos = WorldPosition(atDest.mapId, atDest.x, atDest.y, atDest.z, atDest.o);
+                    }
+#else
                         telePos = WorldPosition(at->target_mapId, at->target_X, at->target_Y, at->target_Z, at->target_Orientation);
+#endif
 
                     std::ostringstream out;
                     out << sPlayerbotAIConfig.GetTimestampStr() << "+00,";
@@ -1624,7 +1631,14 @@ bool MovementAction::MoveTo(uint32 mapId, float x, float y, float z, bool idle, 
                     {
                         AreaTrigger const* at = sObjectMgr.GetAreaTrigger(entry);
                         if (at)
+#ifdef VMANGOS
+                        {
+                            WorldLocation atDest = VmangosAreaTriggerDest(entry);
+                            telePos = WorldPosition(atDest.mapId, atDest.x, atDest.y, atDest.z, atDest.o);
+                        }
+#else
                             telePos = WorldPosition(at->target_mapId, at->target_X, at->target_Y, at->target_Z, at->target_Orientation);
+#endif
                     }
                     else
                         telePos = movePosition;
@@ -2360,6 +2374,9 @@ bool MovementAction::Follow(Unit* target, float distance, float angle)
 
             if (player->IsTaxiFlying()) //Move to where the player is flying to.
             {
+#ifndef VMANGOS
+                // VMANGOS-TODO: no Taxi::Map flight-spline query in vmangos, so
+                // bots can't chase a flying master's destination here.
                 const Taxi::Map tMap = player->GetTaxiPathSpline();
                 if (!tMap.empty())
                 {
@@ -2368,6 +2385,7 @@ bool MovementAction::Follow(Unit* target, float distance, float angle)
                     if (tEnd)
                         return MoveTo(tEnd->mapid, tEnd->x, tEnd->y, tEnd->z);
                 }
+#endif
             }
         }
         if (!target->IsTaxiFlying()/* || bot->GetTransport()*/)

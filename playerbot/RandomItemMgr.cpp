@@ -1226,7 +1226,11 @@ void RandomItemMgr::BuildItemInfoCache()
                 cacheInfo->source = ITEM_SOURCE_VENDOR;
                 cacheInfo->sourceIds.push_back(vendor);
 
+#ifdef VMANGOS
+                FactionTemplateEntry const* factionEntry = sFactionTemplateStore.LookupEntry(cInfo->faction);
+#else
                 FactionTemplateEntry const* factionEntry = sFactionTemplateStore.LookupEntry(cInfo->Faction);
+#endif
                 if (PlayerbotAI::friendToAlliance(factionEntry))
                     isAlly = true;
                 if (PlayerbotAI::friendToHorde(factionEntry))
@@ -3018,9 +3022,15 @@ bool RandomItemMgr::CanBuyFromVendor(Player *player, uint32 itemId, uint32 creat
             if (pProto)
             {
                 // when no faction required but rank > 0 will be used faction id from the vendor faction template to compare the rank
+#ifdef VMANGOS
+                if (!pProto->RequiredReputationFaction && pProto->RequiredReputationRank > 0 &&
+                    ReputationRank(pProto->RequiredReputationRank) > player->GetReputationRank(sFactionTemplateStore.LookupEntry(cInfo->faction)->faction))
+                    return false;
+#else
                 if (!pProto->RequiredReputationFaction && pProto->RequiredReputationRank > 0 &&
                     ReputationRank(pProto->RequiredReputationRank) > player->GetReputationRank(sFactionTemplateStore.LookupEntry(cInfo->Faction)->faction))
                     return false;
+#endif
 
                 if (crItem->conditionId && !sObjectMgr.IsConditionSatisfied(crItem->conditionId, player, player->GetMap(), nullptr, CONDITION_FROM_VENDOR))
                     return false;

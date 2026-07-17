@@ -1237,22 +1237,38 @@ uint32 WorldPosition::getUnitsAggro(const std::list<ObjectGuid>& units, const Pl
 
 bool FindPointCreatureData::operator()(CreatureDataPair const& dataPair)
 {
+#ifdef VMANGOS
+    if (!entry || dataPair.second.creature_id[0] == entry)
+        if ((!point || dataPair.second.position.mapId == point.getMapId()) && (!radius || point.sqDistance(WorldPosition(dataPair.second.position.mapId, dataPair.second.position.x, dataPair.second.position.y, dataPair.second.position.z)) < radius * radius))
+        {
+            data.push_back(&dataPair);
+        }
+#else
     if (!entry || dataPair.second.id == entry)
         if ((!point || dataPair.second.mapid == point.getMapId()) && (!radius || point.sqDistance(WorldPosition(dataPair.second.mapid, dataPair.second.posX, dataPair.second.posY, dataPair.second.posZ)) < radius * radius))
         {
             data.push_back(&dataPair);
         }
+#endif
 
     return false;
 }
 
 bool FindPointGameObjectData::operator()(GameObjectDataPair const& dataPair)
 {
+#ifdef VMANGOS
+    if (!entry || dataPair.second.id == entry)
+        if ((!point || dataPair.second.position.mapId == point.getMapId()) && (!radius || point.sqDistance(WorldPosition(dataPair.second.position.mapId, dataPair.second.position.x, dataPair.second.position.y, dataPair.second.position.z)) < radius * radius))
+        {
+            data.push_back(&dataPair);
+        }
+#else
     if (!entry || dataPair.second.id == entry)
         if ((!point || dataPair.second.mapid == point.getMapId()) && (!radius || point.sqDistance(WorldPosition(dataPair.second.mapid, dataPair.second.posX, dataPair.second.posY, dataPair.second.posZ)) < radius * radius))
         {
             data.push_back(&dataPair);
         }
+#endif
 
     return false;
 }

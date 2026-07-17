@@ -1,6 +1,12 @@
 #include "playerbot/TravelMgr.h"
 #include <numeric>
 #include <iomanip>
+#ifdef VMANGOS
+// vmangos's include chain doesn't transitively pull these in the way cmangos's
+// does: std::default_random_engine needs <random>, std::countr_zero needs <bit>.
+#include <random>
+#include <bit>
+#endif
 
 #include "playerbot/strategy/values/SharedValueContext.h"
 #include "playerbot/strategy/values/TravelValues.h"
@@ -282,11 +288,20 @@ bool QuestObjectiveTravelDestination::IsPossible(const PlayerTravelInfo& info) c
 
         if (!skipKillableCheck && !forceThisQuest)
         {
+#ifdef VMANGOS
+            if (cInfo && (int)cInfo->level_max - (int)info.GetLevel() > 4)
+                return false;
+#else
             if (cInfo && (int)cInfo->MaxLevel - (int)info.GetLevel() > 4)
                 return false;
+#endif
 
             //Do not try to hand-in dungeon/elite quests in instances without a group.
+#ifdef VMANGOS
+            if (cInfo->rank > CREATURE_ELITE_NORMAL)
+#else
             if (cInfo->Rank > CREATURE_ELITE_NORMAL)
+#endif
             {
                 if (!IsOverWorld(info.GetPosition()) && info.GetPosition().getMapId() != 609 && !info.GetBoolValue("can fight boss"))
                     return false;
@@ -594,19 +609,34 @@ bool GrindTravelDestination::IsPossible(const PlayerTravelInfo& info) const
 
     int32 maxLevel = std::max(botLevel * (0.5f + levelMod), botLevel - 5.0f + levelBoost);
 
+#ifdef VMANGOS
+    if ((int32)cInfo->level_max > maxLevel) //@lvl5 max = 3, @lvl60 max = 57
+        return false;
+#else
     if ((int32)cInfo->MaxLevel > maxLevel) //@lvl5 max = 3, @lvl60 max = 57
         return false;
+#endif
 
     int32 minLevel = std::max(botLevel * (0.4f + levelMod), botLevel - 12.0f + levelBoost);
 
+#ifdef VMANGOS
+    if ((int32)cInfo->level_max < minLevel) //@lvl5 min = 3, @lvl60 max = 50
+        return false;
+#else
     if ((int32)cInfo->MaxLevel < minLevel) //@lvl5 min = 3, @lvl60 max = 50
         return false;
+#endif
 
     if (cInfo->MinLootGold == 0)
         return false;
 
+#ifdef VMANGOS
+    if (cInfo->rank > CREATURE_ELITE_NORMAL && !info.GetBoolValue("can fight elite"))
+        return false;
+#else
     if (cInfo->Rank > CREATURE_ELITE_NORMAL && !info.GetBoolValue("can fight elite"))
         return false;
+#endif
 
     return true;
 }
@@ -640,8 +670,13 @@ bool BossTravelDestination::IsPossible(const PlayerTravelInfo& info) const
 
     CreatureInfo const* cInfo = VMANGOS_GET_CREATURE_TEMPLATE(GetEntry());
 
+#ifdef VMANGOS
+    if ((int32)cInfo->level_max > info.GetLevel() + 3)
+        return false;
+#else
     if ((int32)cInfo->MaxLevel > info.GetLevel() + 3)
         return false;
+#endif
     
     const MapEntry* mapEntry = ClosetMapEntry(info.GetPosition());
     
@@ -740,8 +775,13 @@ bool GatherTravelDestination::IsPossible(const PlayerTravelInfo& info) const
         if (!cInfo)
             return false;
 
+#ifdef VMANGOS
+        skillId = VmangosGetRequiredLootSkill(cInfo);
+        uint32 targetLevel = cInfo->level_max;
+#else
         skillId = cInfo->GetRequiredLootSkill();
         uint32 targetLevel = cInfo->MaxLevel;
+#endif
         reqSkillValue = targetLevel < 10 ? 1 : targetLevel < 20 ? (targetLevel - 10) * 10 : targetLevel * 5;
     }
     else
@@ -1143,19 +1183,31 @@ int32 TravelMgr::GetAreaLevel(uint32 area_id)
             continue;
 
         CreatureData const cData = creaturePair->second;
+#ifdef VMANGOS
+        CreatureInfo const* cInfo = VMANGOS_GET_CREATURE_TEMPLATE(cData.creature_id[0]);
+#else
         CreatureInfo const* cInfo = VMANGOS_GET_CREATURE_TEMPLATE(cData.id);
+#endif
 
         if (!cInfo)
             continue;
 
+#ifdef VMANGOS
+        FactionTemplateEntry const* factionEntry = sFactionTemplateStore.LookupEntry(cInfo->faction);
+#else
         FactionTemplateEntry const* factionEntry = sFactionTemplateStore.LookupEntry(cInfo->Faction);
+#endif
         ReputationRank reactionHum = PlayerbotAI::GetFactionReaction(humanFaction, factionEntry);
         ReputationRank reactionOrc = PlayerbotAI::GetFactionReaction(orcFaction, factionEntry);
 
         if (reactionHum > REP_NEUTRAL || reactionOrc > REP_NEUTRAL)
             continue;
 
+#ifdef VMANGOS
+        level += cInfo->level_max;
+#else
         level += cInfo->MaxLevel;
+#endif
         cnt++;
     }
 
@@ -1270,17 +1322,29 @@ void TravelMgr::SetMobAvoidAreaMap(uint32 mapId)
     for (auto& creaturePair : creatures)
     {
         CreatureData const cData = creaturePair->second;
+#ifdef VMANGOS
+        CreatureInfo const* cInfo = VMANGOS_GET_CREATURE_TEMPLATE(cData.creature_id[0]);
+#else
         CreatureInfo const* cInfo = VMANGOS_GET_CREATURE_TEMPLATE(cData.id);
+#endif
 
         if (!cInfo)
             continue;
 
+#ifdef VMANGOS
+        WorldPosition point = WorldPosition(cData.position.mapId, cData.position.x, cData.position.y, cData.position.z, cData.position.o);
+#else
         WorldPosition point = WorldPosition(cData.mapid, cData.posX, cData.posY, cData.posZ, cData.orientation);
+#endif
 
         if (cInfo->NpcFlags > 0)
             continue;
 
+#ifdef VMANGOS
+        FactionTemplateEntry const* factionEntry = sFactionTemplateStore.LookupEntry(cInfo->faction);
+#else
         FactionTemplateEntry const* factionEntry = sFactionTemplateStore.LookupEntry(cInfo->Faction);
+#endif
         ReputationRank reactionHum = PlayerbotAI::GetFactionReaction(humanFaction, factionEntry);
         ReputationRank reactionOrc = PlayerbotAI::GetFactionReaction(orcFaction, factionEntry);
 
@@ -1549,23 +1613,41 @@ void TravelMgr::LoadQuestTravelTable()
         for (auto& creaturePair : WorldPosition().getCreaturesNear())
         {
             CreatureData const cData = creaturePair->second;
+#ifdef VMANGOS
+            CreatureInfo const* cInfo = VMANGOS_GET_CREATURE_TEMPLATE(cData.creature_id[0]);
+#else
             CreatureInfo const* cInfo = VMANGOS_GET_CREATURE_TEMPLATE(cData.id);
+#endif
 
             if (!cInfo)
                 continue;
 
+#ifdef VMANGOS
+            WorldPosition point = WorldPosition(cData.position.mapId, cData.position.x, cData.position.y, cData.position.z, cData.position.o);
+#else
             WorldPosition point = WorldPosition(cData.mapid, cData.posX, cData.posY, cData.posZ, cData.orientation);
+#endif
 
+#ifdef VMANGOS
+            std::string name = cInfo->name;
+#else
             std::string name = cInfo->Name;
+#endif
             name.erase(remove(name.begin(), name.end(), ','), name.end());
             name.erase(remove(name.begin(), name.end(), '\"'), name.end());
 
             std::ostringstream out;
             out << name << ",";
             point.printWKT(out);
+#ifdef VMANGOS
+            out << cInfo->level_max << ",";
+            out << cInfo->rank << ",";
+            out << cInfo->faction << ",";
+#else
             out << cInfo->MaxLevel << ",";
             out << cInfo->Rank << ",";
             out << cInfo->Faction << ",";
+#endif
             out << cInfo->NpcFlags << ",";
             out << point.getAreaName() << ",";
             out << std::fixed;
@@ -2116,7 +2198,11 @@ void TravelMgr::LoadQuestTravelTable()
             if (!data)
                 continue;
 
+#ifdef VMANGOS
+            WorldPosition point = WorldPosition(gData.position.mapId, gData.position.x, gData.position.y, gData.position.z, gData.position.o);
+#else
             WorldPosition point = WorldPosition(gData.mapid, gData.posX, gData.posY, gData.posZ, gData.orientation);
+#endif
 
             std::string name = data->name;
             name.erase(remove(name.begin(), name.end(), ','), name.end());

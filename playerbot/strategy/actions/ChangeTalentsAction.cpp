@@ -398,7 +398,11 @@ TalentSpec* ChangeTalentsAction::GetBestPremadeSpec(Player* bot, int specId)
 bool AutoSetTalentsAction::Execute(Event& event)
 {
     Player* requester = event.getOwner() ? event.getOwner() : GetMaster();
+#ifdef VMANGOS
+    sPlayerbotAIConfig.logEvent(ai, "AutoSetTalentsAction", std::to_string(bot->GetLevelPlayedTime()), std::to_string(bot->GetTotalPlayedTime()));
+#else
     sPlayerbotAIConfig.logEvent(ai, "AutoSetTalentsAction", std::to_string(bot->m_Played_time[PLAYED_TIME_LEVEL]), std::to_string(bot->m_Played_time[PLAYED_TIME_TOTAL]));
+#endif
 
     std::ostringstream out;
 

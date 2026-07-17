@@ -554,7 +554,11 @@ bool BroadcastHelper::BroadcastCreatureKill(
     }
     else
     {
+#ifdef VMANGOS
+        switch (creature->GetCreatureInfo()->rank)
+#else
         switch (creature->GetCreatureInfo()->Rank)
+#endif
         {
         case CREATURE_ELITE_NORMAL:
             if (urand(1, sPlayerbotAIConfig.broadcastChanceMaxValue) <= sPlayerbotAIConfig.broadcastChanceKillNormal)

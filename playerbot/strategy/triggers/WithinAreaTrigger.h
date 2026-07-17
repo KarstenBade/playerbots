@@ -30,8 +30,13 @@ namespace ai
     private:
         bool IsPointInAreaTriggerZone(AreaTriggerEntry const* atEntry, uint32 mapid, float x, float y, float z, float delta)
         {
+#ifdef VMANGOS
+            if (mapid != atEntry->map_id)
+                return false;
+#else
             if (mapid != atEntry->mapid)
                 return false;
+#endif
 
             if (atEntry->radius > 0)
             {

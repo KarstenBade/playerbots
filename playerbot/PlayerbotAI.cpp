@@ -308,7 +308,11 @@ void PlayerbotAI::UpdateAI(uint32 elapsed, bool minimal)
                 if (lootObject.IsUnit())
                 {
                     Unit* unitTarget = (Unit*)loot->GetLootTarget();
+#ifdef VMANGOS
+                    LootAccess const* lootAccess = reinterpret_cast<LootAccess const*>(unitTarget->ToCreature() ? unitTarget->ToCreature()->m_loot : nullptr);
+#else
                     LootAccess const* lootAccess = reinterpret_cast<LootAccess const*>(unitTarget->m_loot);
+#endif
                     // If the bot is actually one of the players looting
                     if (!lootAccess->m_playersLooting.contains(bot->GetObjectGuid()))
                     {
@@ -793,7 +797,11 @@ bool PlayerbotAI::IsInRaid()
                     const CreatureInfo* creatureInfo = creature->GetCreatureInfo();
                     if (creatureInfo)
                     {
+#ifdef VMANGOS
+                        if (creatureInfo->rank == CREATURE_ELITE_WORLDBOSS)
+#else
                         if (creatureInfo->Rank == CREATURE_ELITE_WORLDBOSS)
+#endif
                         {
                             inRaidFight = true;
                             break;
@@ -855,9 +863,15 @@ bool PlayerbotAI::CanEnterArea(const AreaTrigger* area)
 {
     if (sRandomPlayerbotMgr.IsRandomBot(GetBot()))
     {
-        DungeonPersistentState* state = bot->GetBoundInstanceSaveForSelfOrGroup(area->target_mapId);
-        Map* map = sMapMgr.FindMap(area->target_mapId, state ? state->GetInstanceId() : 0);
-        const MapEntry* mapEntry = sMapStore.LookupEntry(area->target_mapId);
+#ifdef VMANGOS
+        // vmangos keeps the teleport destination in a separate AreaTriggerTeleport.
+        uint32 targetMapId = VmangosAreaTriggerDest(area->id).mapId;
+#else
+        uint32 targetMapId = area->target_mapId;
+#endif
+        DungeonPersistentState* state = bot->GetBoundInstanceSaveForSelfOrGroup(targetMapId);
+        Map* map = sMapMgr.FindMap(targetMapId, state ? state->GetInstanceId() : 0);
+        const MapEntry* mapEntry = sMapStore.LookupEntry(targetMapId);
 
         // check if this account try to abuse reseting instance
 #ifdef MANGOSBOT_ZERO
@@ -878,7 +892,7 @@ bool PlayerbotAI::CanEnterArea(const AreaTrigger* area)
         if (map && map->IsDungeon())
         {
             // cannot enter if the instance is full (player cap), GMs don't count, must not check when teleporting around the same map
-            if (bot->GetMapId() != area->target_mapId)
+            if (bot->GetMapId() != targetMapId)
             {
                 if (((DungeonMap*)map)->GetPlayersCountExceptGMs() >= ((DungeonMap*)map)->GetMaxPlayers())
                 {
@@ -893,11 +907,11 @@ bool PlayerbotAI::CanEnterArea(const AreaTrigger* area)
 
                 // Bind Checks
 #ifdef MANGOSBOT_ZERO
-                InstancePlayerBind* pBind = bot->GetBoundInstance(area->target_mapId);
+                InstancePlayerBind* pBind = bot->GetBoundInstance(targetMapId);
 #elif MANGOSBOT_ONE
-                InstancePlayerBind* pBind = bot->GetBoundInstance(area->target_mapId, bot->GetDifficulty());
+                InstancePlayerBind* pBind = bot->GetBoundInstance(targetMapId, bot->GetDifficulty());
 #else
-                InstancePlayerBind* pBind = bot->GetBoundInstance(area->target_mapId, bot->GetDifficulty(mapEntry->IsRaid()));
+                InstancePlayerBind* pBind = bot->GetBoundInstance(targetMapId, bot->GetDifficulty(mapEntry->IsRaid()));
 #endif
                 if (pBind && pBind->perm && pBind->state != state)
                 {
@@ -2624,12 +2638,20 @@ Unit* PlayerbotAI::GetUnit(CreatureDataPair const* creatureDataPair)
     if (!creatureDataPair)
         return NULL;
 
+#ifdef VMANGOS
+    ObjectGuid guid(HIGHGUID_UNIT, creatureDataPair->second.creature_id[0], creatureDataPair->first);
+#else
     ObjectGuid guid(HIGHGUID_UNIT, creatureDataPair->second.id, creatureDataPair->first);
+#endif
 
     if (!guid)
         return NULL;
 
+#ifdef VMANGOS
+    Map* map = sMapMgr.FindMap(creatureDataPair->second.position.mapId);
+#else
     Map* map = sMapMgr.FindMap(creatureDataPair->second.mapid);
+#endif
 
     if (!map)
         return NULL;
@@ -2684,7 +2706,11 @@ GameObject* PlayerbotAI::GetGameObject(GameObjectDataPair const* gameObjectDataP
     if (!guid)
         return NULL;
 
+#ifdef VMANGOS
+    Map* map = sMapMgr.FindMap(gameObjectDataPair->second.position.mapId);
+#else
     Map* map = sMapMgr.FindMap(gameObjectDataPair->second.mapid);
+#endif
 
     if (!map)
         return NULL;
@@ -7133,8 +7159,15 @@ bool PlayerbotAI::HasQuestItemsInWOLootList(WorldObject* wo)
 
     LootItemList lootItemList = {};
 
+#ifdef VMANGOS
+    Loot* woLoot = wo->ToCreature() ? wo->ToCreature()->m_loot
+                 : (wo->ToGameObject() ? wo->ToGameObject()->m_loot : nullptr);
+    if (woLoot)
+        woLoot->GetLootItemsListFor(bot, lootItemList);
+#else
     if (wo->m_loot)
         wo->m_loot->GetLootItemsListFor(bot, lootItemList);
+#endif
 
     if (HasQuestItemsInLootList(lootItemList))
     {
@@ -7712,8 +7745,14 @@ void PlayerbotAI::AccelerateRespawn(Creature* creature, float accelMod)
 
         CreatureInfo const* cinfo = creature->GetCreatureInfo();
 
+#ifdef VMANGOS
+        // vmangos CreatureInfo has no per-template corpse-delay override field.
+        if (false)
+            defaultDelay = 0;
+#else
         if (cinfo->CorpseDelay)
             defaultDelay = cinfo->CorpseDelay;
+#endif
         else if (sObjectMgr.IsEncounter(creature->GetEntry(), creature->GetMapId()))
         {
             // encounter boss forced decay timer to 1h
@@ -7721,7 +7760,11 @@ void PlayerbotAI::AccelerateRespawn(Creature* creature, float accelMod)
         }
         else
         {
+#ifdef VMANGOS
+            switch (cinfo->rank)
+#else
             switch (cinfo->Rank)
+#endif
             {
             case CREATURE_ELITE_RARE:
                 defaultDelay = sWorld.getConfig(CONFIG_UINT32_CORPSE_DECAY_RARE);

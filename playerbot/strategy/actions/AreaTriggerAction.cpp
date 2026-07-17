@@ -32,14 +32,22 @@ bool ReachAreaTriggerAction::Execute(Event& event)
         return true;
     }
 
+#ifdef VMANGOS
+    if (bot->GetMapId() != atEntry->map_id || bot->GetDistance(atEntry->x, atEntry->y, atEntry->z) > sPlayerbotAIConfig.sightDistance)
+#else
     if (bot->GetMapId() != atEntry->mapid || bot->GetDistance(atEntry->x, atEntry->y, atEntry->z) > sPlayerbotAIConfig.sightDistance)
+#endif
     {
         ai->TellError(requester, "I won't follow: too far away");
         return true;
     }
 
     MotionMaster &mm = *bot->GetMotionMaster();
+#ifdef VMANGOS
+	mm.MovePoint(atEntry->map_id, atEntry->x, atEntry->y, atEntry->z, FORCED_MOVEMENT_RUN);
+#else
 	mm.MovePoint(atEntry->mapid, atEntry->x, atEntry->y, atEntry->z, FORCED_MOVEMENT_RUN);
+#endif
     const float distance = sqrt(bot->GetDistance(atEntry->x, atEntry->y, atEntry->z));
     const float duration = 1000.0f * distance / bot->GetSpeed(MOVE_RUN) + sPlayerbotAIConfig.reactDelay;
     ai->TellError(requester, "Wait for me");

@@ -94,7 +94,11 @@ bool OpenLootAction::DoLoot(LootObject& lootObject)
 
     if (creature)
     {
+#ifdef VMANGOS
+        SkillType skill = VmangosGetRequiredLootSkill(creature->GetCreatureInfo());
+#else
         SkillType skill = creature->GetCreatureInfo()->GetRequiredLootSkill();
+#endif
         if (!CanOpenLock(skill, lootObject.reqSkillValue))
             return false;
 

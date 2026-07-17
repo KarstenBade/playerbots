@@ -217,7 +217,11 @@ void ChatReplyAction::GetAIChatPlaceholders(std::map<std::string, std::string>& 
 
         for (auto& gossip = pMenuBounds.first; gossip != pMenuBounds.second; gossip++)
         {
+#ifdef VMANGOS
+            const GossipText* gos = VmangosGetGossipText(gossip->second.text_id);
+#else
             const GossipText* gos = sObjectMgr.GetGossipText(gossip->second.text_id);
+#endif
             gossipText += " " + gos->Options->Text_0;
         }
 
@@ -225,7 +229,11 @@ void ChatReplyAction::GetAIChatPlaceholders(std::map<std::string, std::string>& 
 
         if (textId)
         {
+#ifdef VMANGOS
+            const GossipText* gos = VmangosGetGossipText(textId);
+#else
             const GossipText* gos = sObjectMgr.GetGossipText(textId);
+#endif
             if (gos)
                 gossipText += " " + gos->Options->Text_0;
         }

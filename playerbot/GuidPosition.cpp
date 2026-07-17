@@ -46,7 +46,11 @@ GuidPosition::GuidPosition(CreationMask type, const std::string& qualifier, cons
         GameTele const* tele = sObjectMgr.GetGameTele(qualifier);
         if (tele)
         {
+#ifdef VMANGOS
+            set(WorldPosition(tele->mapId, tele->x, tele->y, tele->z, referencePos.orientation));
+#else
             set(WorldPosition(tele->mapId, tele->position_x, tele->position_y, tele->position_z, referencePos.orientation));
+#endif
             GuidPosition::Set(0);
             return;
         }
@@ -110,7 +114,11 @@ const FactionTemplateEntry* GuidPosition::GetFactionTemplateEntry() const
     if (IsPlayer() && GetPlayer())
         return GetPlayer()->GetFactionTemplateEntry();
     if (IsCreature()  && GetCreatureTemplate())
+#ifdef VMANGOS
+        return sFactionTemplateStore.LookupEntry(GetCreatureTemplate()->faction);
+#else
         return sFactionTemplateStore.LookupEntry(GetCreatureTemplate()->Faction);
+#endif
     if (IsGameObject() && GetGameObjectInfo())
         return sFactionTemplateStore.LookupEntry(GetGameObjectInfo()->faction);
 

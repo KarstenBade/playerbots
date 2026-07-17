@@ -136,7 +136,11 @@ void FindQuestObjectData::GetObjectiveEntries()
 //Data worker. Checks for a specific creature what quest they are needed for and puts them in the proper place in the quest map.
 bool FindQuestObjectData::operator()(CreatureDataPair const& dataPair)
 {
+#ifdef VMANGOS
+	uint32 entry = dataPair.second.creature_id[0];
+#else
 	uint32 entry = dataPair.second.id;
+#endif
 
 	for (auto& [questId, flag] : relationMap[entry])
 	{
@@ -233,8 +237,13 @@ std::list<GuidPosition> ActiveQuestGiversValue::Calculate()
 
 			if (creatureInfo)
 			{
+#ifdef VMANGOS
+				if (!ai->IsFriendlyTo(creatureInfo->faction))
+					continue;
+#else
 				if (!ai->IsFriendlyTo(creatureInfo->Faction))
 					continue;
+#endif
 			}
 
 			if (guidp.isDead(bot->GetInstanceId()))
@@ -287,8 +296,13 @@ std::list<GuidPosition> ActiveQuestTakersValue::Calculate()
 
 				if (info)
 				{
+#ifdef VMANGOS
+					if (!ai->IsFriendlyTo(info->faction))
+						continue;
+#else
 					if (!ai->IsFriendlyTo(info->Faction))
 						continue;
+#endif
 				}
 			}
 

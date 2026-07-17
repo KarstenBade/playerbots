@@ -368,7 +368,15 @@ bool ShouldLootObject::Calculate()
 	if (!object)
 		return false;
 
-	if (!object->m_loot)
+#ifdef VMANGOS
+	// vmangos stores loot by value on Creature/GameObject, not on WorldObject.
+	Loot* objLoot = object->ToCreature() ? object->ToCreature()->m_loot
+				  : (object->ToGameObject() ? object->ToGameObject()->m_loot : nullptr);
+#else
+	Loot* objLoot = object->m_loot;
+#endif
+
+	if (!objLoot)
     {
 		if (!object->IsGameObject())
 			return true;
@@ -401,10 +409,10 @@ bool ShouldLootObject::Calculate()
 		return true;				
     }
 
-	if (object->m_loot->GetGoldAmount() > 0)
+	if (objLoot->GetGoldAmount() > 0)
 		return true;
 
-	LootAccess const* lootAccess = reinterpret_cast<LootAccess const*>(object->m_loot);
+	LootAccess const* lootAccess = reinterpret_cast<LootAccess const*>(objLoot);
 
 	if (!lootAccess)
 		return false;

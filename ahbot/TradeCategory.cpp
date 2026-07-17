@@ -47,12 +47,21 @@ bool TradeSkill::ContainsInternal(ItemPrototype const* proto)
     for (uint32 id = 0; id < sCreatureStorage.GetMaxEntry(); ++id)
     {
         CreatureInfo const* co = sCreatureStorage.LookupEntry<CreatureInfo>(id);
+#ifdef VMANGOS
+        if (!co || co->trainer_type != TRAINER_TYPE_TRADESKILLS)
+            continue;
+
+        uint32 trainerId = co->TrainerTemplateId;
+        if (!trainerId)
+            trainerId = co->entry;
+#else
         if (!co || co->TrainerType != TRAINER_TYPE_TRADESKILLS)
             continue;
 
         uint32 trainerId = co->TrainerTemplateId;
         if (!trainerId)
             trainerId = co->Entry;
+#endif
 
         TrainerSpellData const* trainer_spells = sObjectMgr.GetNpcTrainerTemplateSpells(trainerId);
         if (!trainer_spells)

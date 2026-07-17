@@ -72,7 +72,23 @@ void AutoLearnSpellAction::LearnTrainerSpells(std::ostringstream* out)
         if (!co)
             continue;
 
-        if (co->TrainerType != TRAINER_TYPE_CLASS && 
+#ifdef VMANGOS
+        if (co->trainer_type != TRAINER_TYPE_CLASS &&
+            co->trainer_type != TRAINER_TYPE_TRADESKILLS &&
+            co->trainer_type != TRAINER_TYPE_PETS)
+            continue;
+
+        if (co->trainer_type == TRAINER_TYPE_PETS && bot->getClass() == CLASS_HUNTER)
+            continue;
+
+        if ((co->trainer_type == TRAINER_TYPE_CLASS || co->trainer_type == TRAINER_TYPE_PETS) && co->TrainerClass != bot->getClass())
+            continue;
+
+        uint32 trainerId = co->TrainerTemplateId;
+        if (!trainerId)
+            trainerId = co->entry;
+#else
+        if (co->TrainerType != TRAINER_TYPE_CLASS &&
             co->TrainerType != TRAINER_TYPE_TRADESKILLS &&
             co->TrainerType != TRAINER_TYPE_PETS)
             continue;
@@ -86,6 +102,7 @@ void AutoLearnSpellAction::LearnTrainerSpells(std::ostringstream* out)
         uint32 trainerId = co->TrainerTemplateId;
         if (!trainerId)
             trainerId = co->Entry;
+#endif
 
         TrainerSpellData const* trainer_spells = sObjectMgr.GetNpcTrainerTemplateSpells(trainerId);
         if (!trainer_spells)
@@ -108,7 +125,11 @@ void AutoLearnSpellAction::LearnTrainerSpells(std::ostringstream* out)
             if (state != TRAINER_SPELL_GREEN)
                 continue;
             
+#ifdef VMANGOS
+            if (co->trainer_type == TRAINER_TYPE_TRADESKILLS)
+#else
             if (co->TrainerType == TRAINER_TYPE_TRADESKILLS)
+#endif
             {
                 SpellEntry const* spell = sServerFacade.LookupSpellInfo(tSpell->spell);
                 if (spell)

@@ -507,7 +507,11 @@ std::string ChatHelper::formatWorldEntry(int32 entry)
     if (entry < 0 && gInfo)
         name = gInfo->name;
     else if (entry > 0 && cInfo)
+#ifdef VMANGOS
+        name = cInfo->name;
+#else
         name = cInfo->Name;
+#endif
     
     if(name.empty())
         name = "unknown:" + std::to_string(entry);

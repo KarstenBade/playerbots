@@ -30,7 +30,11 @@ static void InitTeleLocations()
 {
     for (auto const& [id, tele] : sObjectMgr.GetGameTeleMap())
     {
+#ifdef VMANGOS
+        GuidPosition pos(ObjectGuid(), WorldPosition(tele.mapId, tele.x, tele.y, tele.z, tele.o));
+#else
         GuidPosition pos(ObjectGuid(), WorldPosition(tele.mapId, tele.position_x, tele.position_y, tele.position_z, tele.orientation));
+#endif
         sTeleLocations.push_back({ tele.name, pos });
     }
 }

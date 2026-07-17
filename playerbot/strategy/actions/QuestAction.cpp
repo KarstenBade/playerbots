@@ -291,9 +291,15 @@ bool QuestUpdateAddKillAction::Execute(Event& event)
         CreatureInfo const* info = sObjectMgr.GetCreatureTemplate(entry);
         if (info)
         {
+#ifdef VMANGOS
+            ai->TellPlayer(requester, chat->formatQuestObjective(info->name, available, required), PlayerbotSecurityLevel::PLAYERBOT_SECURITY_ALLOW_ALL, false);
+
+            BroadcastHelper::BroadcastQuestUpdateAddKill(ai, bot, qInfo, available, required, info->name);
+#else
             ai->TellPlayer(requester, chat->formatQuestObjective(info->Name, available, required), PlayerbotSecurityLevel::PLAYERBOT_SECURITY_ALLOW_ALL, false);
 
             BroadcastHelper::BroadcastQuestUpdateAddKill(ai, bot, qInfo, available, required, info->Name);
+#endif
         }
     }
     else

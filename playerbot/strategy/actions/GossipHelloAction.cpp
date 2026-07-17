@@ -88,7 +88,11 @@ void GossipHelloAction::TellGossipText(Player* requester, uint32 textId)
     if (!textId)
         return;
 
+#ifdef VMANGOS
+    GossipText const* text = VmangosGetGossipText(textId);
+#else
     GossipText const* text = sObjectMgr.GetGossipText(textId);
+#endif
     if (text)
     {
         for (int i = 0; i < MAX_GOSSIP_TEXT_OPTIONS; i++)

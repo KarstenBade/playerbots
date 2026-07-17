@@ -259,7 +259,11 @@ bool RpgRepairTrigger::IsActive()
 bool RpgTrainTrigger::IsTrainerOf(CreatureInfo const* cInfo, Player* pPlayer)
 {
 
+#ifdef VMANGOS
+    switch (cInfo->trainer_type)
+#else
     switch (cInfo->TrainerType)
+#endif
     {
     case TRAINER_TYPE_CLASS:
         if (pPlayer->getClass() != cInfo->TrainerClass)
@@ -277,7 +281,11 @@ bool RpgTrainTrigger::IsTrainerOf(CreatureInfo const* cInfo, Player* pPlayer)
         if (cInfo->TrainerRace && pPlayer->getRace() != cInfo->TrainerRace)
         {
             // Allowed to train if exalted
+#ifdef VMANGOS
+            if (FactionTemplateEntry const* faction_template = sFactionTemplateStore.LookupEntry(cInfo->faction))
+#else
             if (FactionTemplateEntry const* faction_template = sFactionTemplateStore.LookupEntry(cInfo->Faction))
+#endif
             {
                 if (pPlayer->GetReputationRank(faction_template->faction) == REP_EXALTED)
                     return true;
@@ -286,7 +294,11 @@ bool RpgTrainTrigger::IsTrainerOf(CreatureInfo const* cInfo, Player* pPlayer)
         }
         break;
     case TRAINER_TYPE_TRADESKILLS:
+#ifdef VMANGOS
+        if (cInfo->trainer_spell && !pPlayer->HasSpell(cInfo->trainer_spell))
+#else
         if (cInfo->TrainerSpell && !pPlayer->HasSpell(cInfo->TrainerSpell))
+#endif
         {
             return false;
         }
@@ -323,7 +335,11 @@ bool RpgTrainTrigger::IsActive()
         return false;
     }
 
+#ifdef VMANGOS
+    FactionTemplateEntry const* factionTemplate = sFactionTemplateStore.LookupEntry(cInfo->faction);
+#else
     FactionTemplateEntry const* factionTemplate = sFactionTemplateStore.LookupEntry(cInfo->Faction);
+#endif
     float fDiscountMod = bot->GetReputationPriceDiscount(factionTemplate);
 
     TrainerSpellMap trainer_spells;
@@ -417,7 +433,11 @@ bool RpgTrainTrigger::IsActive()
 
         NeedMoneyFor budgetType = NeedMoneyFor::spells;
 
+#ifdef VMANGOS
+        switch (cInfo->trainer_type)
+#else
         switch (cInfo->TrainerType)
+#endif
         {
         case TRAINER_TYPE_CLASS:
             budgetType = NeedMoneyFor::spells;

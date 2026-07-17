@@ -176,6 +176,9 @@ inline void TellPosition(PlayerbotAI* ai, Player* requester)
     if (bot->IsTaxiFlying())
     {
         out << "On a flight path";
+#ifndef VMANGOS
+        // VMANGOS-TODO: vmangos has no Taxi::Map flight-spline query, so the
+        // destination-area annotation is omitted on vmangos.
         const Taxi::Map tMap = bot->GetTaxiPathSpline();
         if (!tMap.empty())
         {
@@ -186,6 +189,7 @@ inline void TellPosition(PlayerbotAI* ai, Player* requester)
             if (!endArea.empty())
                 out << " to " << endArea;
         }
+#endif
     }
     else if (bot->GetTransport())
     {
