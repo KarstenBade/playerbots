@@ -1138,7 +1138,11 @@ void DebugAction::addAura(uint32 spellId, Unit* target)
         return;
     }
 
+#ifdef VMANGOS
+    SpellAuraHolder* holder = CreateSpellAuraHolder(spellInfo, target, target, target);
+#else
     SpellAuraHolder* holder = CreateSpellAuraHolder(spellInfo, target, target);
+#endif
 
     for (uint32 i = 0; i < MAX_EFFECT_INDEX; ++i)
     {
@@ -5543,7 +5547,11 @@ bool DebugAction::HandleTransanal(Event& event, Player* requester, const std::st
                         0);
 #endif
                     tempPlayer->AddToWorld();
+#ifdef VMANGOS
+                    tempPlayer->SetMap(map); // vmangos MapManager holds raw pointers
+#else
                     tempPlayer->SetMap(map.get());
+#endif
                     tempPlayer->SetTransport(transport);
                     tempPlayer->SetPosition(transPos.getX(), transPos.getY(), transPos.getZ(), 0);
 

@@ -1915,7 +1915,11 @@ bool MovementAction::MoveTo(uint32 mapId, float x, float y, float z, bool idle, 
             PathFinder path(mover);
             path.calculate(movePosition.getX(), movePosition.getY(), movePosition.getZ(), false);
             PathType type = path.getPathType();
+#ifdef VMANGOS
+            PointsArray const& points = path.getPath();
+#else
             PointsArray& points = path.getPath();
+#endif
             bool foundAggro = false;
 
             for (auto p : points)
