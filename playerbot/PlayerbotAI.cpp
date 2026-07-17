@@ -3960,14 +3960,21 @@ bool PlayerbotAI::GetSpellRange(std::string name, float* maxRange, float* minRan
             if(spellRangeEntry)
             {
                 float spellMinRange = 0.0f, spellMaxRange = 0.0f, rangeMod = 0.0f;
-                if (spellRangeEntry->Flags & SPELL_RANGE_FLAG_MELEE)
+#ifdef VMANGOS
+                // vmangos doesn't load SpellRange.dbc's Flags column; the
+                // melee range index is the only per-row melee marker.
+                uint32 spellRangeFlags = (spellRangeEntry->ID == SPELL_RANGE_IDX_COMBAT) ? SPELL_RANGE_FLAG_MELEE : 0;
+#else
+                uint32 spellRangeFlags = spellRangeEntry->Flags;
+#endif
+                if (spellRangeFlags & SPELL_RANGE_FLAG_MELEE)
                 {
                     rangeMod = bot->GetCombinedCombatReach(bot, true, 0.f);
                 }
                 else
                 {
                     float meleeRange = 0.0f;
-                    if (spellRangeEntry->Flags & SPELL_RANGE_FLAG_RANGED)
+                    if (spellRangeFlags & SPELL_RANGE_FLAG_RANGED)
                     {
                         meleeRange = bot->GetCombinedCombatReach(bot, true, 0.f);
                     }
@@ -4214,7 +4221,11 @@ bool PlayerbotAI::CanCastSpell(uint32 spellid, Unit* target, uint8 effectMask, b
 
         if (!damage)
         {
+#ifdef VMANGOS
+            bool immune = target->IsImmuneToSpell(spellInfo, false);
+#else
             bool immune = target->IsImmuneToSpell(spellInfo, false, effectMask, bot);
+#endif
             if (!immune)
             {
                 for (int32 i = EFFECT_INDEX_0; i <= EFFECT_INDEX_2; i++)
@@ -5488,9 +5499,15 @@ bool PlayerbotAI::IsInterruptableSpellCasting(Unit* target, std::string spell, u
 		if ((spellInfo->InterruptFlags & SPELL_INTERRUPT_FLAG_COMBAT) && spellInfo->PreventionType == SPELL_PREVENTION_TYPE_SILENCE)
 			return true;
 
+#ifdef VMANGOS
+		if ((spellInfo->Effect[i] == SPELL_EFFECT_INTERRUPT_CAST) &&
+            (!target->IsImmuneToSpell(spellInfo, true) || !target->IsImmuneToSpellEffect(spellInfo, SpellEffectIndex(i), true)))
+            return true;
+#else
 		if ((spellInfo->Effect[i] == SPELL_EFFECT_INTERRUPT_CAST) &&
             (!target->IsImmuneToSpell(spellInfo, true, effectMask, bot) || !target->IsImmuneToSpellEffect(spellInfo, SpellEffectIndex(i), true)))
             return true;
+#endif
 
         if ((spellInfo->Effect[i] == SPELL_EFFECT_APPLY_AURA) && spellInfo->EffectApplyAuraName[i] == SPELL_AURA_MOD_SILENCE)
             return true;
@@ -5542,6 +5559,16 @@ bool PlayerbotAI::canDispel(const SpellEntry* entry, uint32 dispelType)
     if (entry->Dispel != dispelType)
         return false;
 
+#ifdef VMANGOS
+    return entry->SpellName[0].empty() ||
+        (strcmpi(entry->SpellName[0].c_str(), "demon skin") &&
+        strcmpi(entry->SpellName[0].c_str(), "mage armor") &&
+        strcmpi(entry->SpellName[0].c_str(), "frost armor") &&
+        strcmpi(entry->SpellName[0].c_str(), "wavering will") &&
+        strcmpi(entry->SpellName[0].c_str(), "chilled") &&
+        strcmpi(entry->SpellName[0].c_str(), "mana tap") &&
+        strcmpi(entry->SpellName[0].c_str(), "ice armor"));
+#else
     return !entry->SpellName[0] ||
         (strcmpi((const char*)entry->SpellName[0], "demon skin") &&
         strcmpi((const char*)entry->SpellName[0], "mage armor") &&
@@ -5550,6 +5577,7 @@ bool PlayerbotAI::canDispel(const SpellEntry* entry, uint32 dispelType)
         strcmpi((const char*)entry->SpellName[0], "chilled") &&
         strcmpi((const char*)entry->SpellName[0], "mana tap") &&
         strcmpi((const char*)entry->SpellName[0], "ice armor"));
+#endif
 }
 
 bool PlayerbotAI::IsHealSpell(const SpellEntry* spell)
