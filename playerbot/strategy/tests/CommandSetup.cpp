@@ -61,13 +61,21 @@ TestResult CommandSetupGM::Execute(const std::string& params, Player* bot, Playe
     else if (params == "fly on")
     {
         bot->SetCanFly(true);
+#ifdef VMANGOS
+        // VMANGOS-TODO: no flymode status string on vanilla vmangos.
+#else
         bot->GetSession()->SendNotification(LANG_COMMAND_FLYMODE_STATUS);
+#endif
         return TestResult::PASS;
     }
     else if (params == "fly off")
     {
         bot->SetCanFly(false);
+#ifdef VMANGOS
+        // VMANGOS-TODO: no flymode status string on vanilla vmangos.
+#else
         bot->GetSession()->SendNotification(LANG_COMMAND_FLYMODE_STATUS);
+#endif
         return TestResult::PASS;
     }
     else

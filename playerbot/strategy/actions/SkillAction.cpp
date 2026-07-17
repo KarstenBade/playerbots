@@ -71,7 +71,13 @@ bool SkillAction::Execute(Event& event)
             {
                 args["%skillname"] = ChatHelper::formatSkill(id);
 
+#ifdef VMANGOS
+                // VMANGOS-TODO: no SkillRaceClassInfo store; assume the skill
+                // can be unlearned.
+                if (false)
+#else
                 if (!bot->GetSkillInfo(uint16(id), ([](SkillRaceClassInfoEntry const& entry) { return (entry.flags & SKILL_FLAG_CAN_UNLEARN); })))
+#endif
                 {
                     ai->TellPlayerNoFacing(requester, BOT_TEXT2("Unable to unlearn %skillname", args));
                     return false;

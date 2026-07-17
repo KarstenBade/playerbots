@@ -2944,7 +2944,11 @@ bool MovementAction::Flee(Unit *target)
 
         if (mm->GetCurrentMovementGeneratorType() == CHASE_MOTION_TYPE)
         {
+#ifdef VMANGOS
+            ChaseMovementGenerator<Player>* chase = (ChaseMovementGenerator<Player>*)mm->GetCurrent();
+#else
             ChaseMovementGenerator* chase = (ChaseMovementGenerator*)mm->GetCurrent();
+#endif
 
             if (chase->GetCurrentTarget() == target && sServerFacade.GetChaseOffset(bot) == distance)
                 return true;

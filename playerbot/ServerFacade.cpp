@@ -99,40 +99,40 @@ void ServerFacade::SetFacingTo(Unit* unit, float angle, bool force)
 
 bool ServerFacade::IsFriendlyTo(Unit* bot, Unit* to)
 {
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
     return bot->IsFriendlyTo(to);
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
     return bot->IsFriend(to);
 #endif
 }
 
 bool ServerFacade::IsHostileTo(Unit* bot, Unit* to)
 {
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
     return bot->IsHostileTo(to);
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
     return bot->IsEnemy(to);
 #endif
 }
 
 bool ServerFacade::IsFriendlyTo(WorldObject* bot, Unit* to)
 {
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
     return bot->IsFriendlyTo(to);
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
     return bot->IsFriend(to);
 #endif
 }
 
 bool ServerFacade::IsHostileTo(WorldObject* bot, Unit* to)
 {
-#ifdef MANGOS
+#if defined(MANGOS) || defined(VMANGOS)
     return bot->IsHostileTo(to);
 #endif
-#ifdef CMANGOS
+#if defined(CMANGOS) && !defined(VMANGOS)
     return bot->IsEnemy(to);
 #endif
 }

@@ -140,7 +140,11 @@ const ReputationRank GuidPosition::GetReactionTo(const GuidPosition& other, uint
 
 #ifdef MANGOSBOT_ZERO
                 const FactionEntry* unitFactionEntry = sFactionStore.LookupEntry(GetFactionTemplateEntry()->faction);
+#ifdef VMANGOS
+                return unitPlayer->GetReputationMgr().GetRank(unitFactionEntry) < REP_NEUTRAL ? REP_HOSTILE : REP_FRIENDLY;
+#else
                 return unitPlayer->GetReputationMgr().IsAtWar(unitFactionEntry) ? REP_HOSTILE : REP_FRIENDLY;
+#endif
 #else
                 if (!other.GetUnit(instanceId)->HasFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_IGNORE_REPUTATION))
                 {

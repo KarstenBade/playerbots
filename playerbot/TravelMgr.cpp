@@ -1441,7 +1441,12 @@ void TravelMgr::LoadQuestTravelTable()
         if (guidpMap.find(entry) == guidpMap.end())
             continue;
 
-        static uint32 maxPurposeFlag = std::countr_zero((uint32)TravelDestinationPurpose::MaxFlag); 
+#ifdef VMANGOS
+        // std::countr_zero is C++20; the module builds as C++17 on vmangos.
+        static uint32 maxPurposeFlag = []() { uint32 v = (uint32)TravelDestinationPurpose::MaxFlag; uint32 c = 0; while (c < 32 && !(v & (1u << c))) ++c; return c; }();
+#else
+        static uint32 maxPurposeFlag = std::countr_zero((uint32)TravelDestinationPurpose::MaxFlag);
+#endif
 
         for (uint32 purposeFlagNr = 0; purposeFlagNr < maxPurposeFlag; purposeFlagNr++)
         {

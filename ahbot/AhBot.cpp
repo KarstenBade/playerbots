@@ -376,7 +376,12 @@ int AhBot::Answer(int auction, Category* category, ItemBag* inAuctionItems)
                     bidder, item->GetProto()->Name1, item->GetCount(), auctionIds[auction], entry->buyout);
 
             entry->bid = entry->buyout;
+#ifdef VMANGOS
+            // VMANGOS-TODO: no AuctionEntry::AuctionBidWinning; ahbot leaves
+            // the won auction to expire through the normal update path.
+#else
             entry->AuctionBidWinning(NULL);
+#endif
         }
         else
         {

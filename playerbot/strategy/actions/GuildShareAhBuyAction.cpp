@@ -289,7 +289,13 @@ bool GuildShareAhBuyAction::Execute(Event& event)
     {
         AuctionEntry* auction = bestCandidate.auction;
 
+#ifdef VMANGOS
+        // VMANGOS-TODO: no AuctionEntry::UpdateBid; guild AH buyouts by bots
+        // are skipped on vmangos.
+        return false;
+#else
         auction->UpdateBid(auction->buyout, bot);
+#endif
 
         ItemPrototype const* proto = sObjectMgr.GetItemPrototype(bestCandidate.itemId);
         std::ostringstream out;

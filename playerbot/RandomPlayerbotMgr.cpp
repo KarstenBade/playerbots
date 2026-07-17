@@ -1045,7 +1045,11 @@ void RandomPlayerbotMgr::DelayedFacingFix()
                     if (!unit)
                         continue;
 
+#ifdef VMANGOS
+                    CreatureData const* data = guidP.GetCreatureData();
+#else
                     CreatureData* data = guidP.GetCreatureData();
+#endif
 
                     if (!data)
                         continue;

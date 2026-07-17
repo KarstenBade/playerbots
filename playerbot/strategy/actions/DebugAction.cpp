@@ -1207,8 +1207,13 @@ bool DebugAction::HandleMount(Event& event, Player* requester, const std::string
     out << (bot->IsTaxiFlying() ? ", taxi flying" : ", not taxi flying");
     out << ", mount speed: " << AI_VALUE2(uint32, "current mount speed", "self target");
     out << ", mount id: " << bot->GetMountID();        
+#ifdef VMANGOS
+    if(bot->GetMountInfo())
+        out << ", mount info: " << bot->GetMountInfo()->name;
+#else
     if(bot->GetMountInfo())
         out << ", mount info: " << bot->GetMountInfo()->Name;
+#endif
     ai->TellPlayerNoFacing(requester, out, PlayerbotSecurityLevel::PLAYERBOT_SECURITY_ALLOW_ALL, true, false);
     return true;
 }
@@ -5488,6 +5493,9 @@ bool DebugAction::HandleTransanal(Event& event, Player* requester, const std::st
                 if (hitPoints.empty())
                     continue;
 
+#ifdef VMANGOS
+                WorldSession* session = new WorldSession(0, nullptr, SEC_PLAYER, 0, LOCALE_enUS);
+#else
                 WorldSession* session = new WorldSession(0, NULL, SEC_PLAYER,
 #ifdef MANGOSBOT_TWO
                     2,
@@ -5504,11 +5512,20 @@ bool DebugAction::HandleTransanal(Event& event, Player* requester, const std::st
 #ifdef MANGOSBOT_ZERO
                     0, LOCALE_enUS, "", 0);
 #endif
+#endif
 
                     session->SetNoAnticheat();
 
                     Player* tempPlayer = new Player(session);
 
+#ifdef VMANGOS
+                    tempPlayer->Create(sObjectMgr.GeneratePlayerLowGuid(), "test", 1, 1, 0,
+                        0, // skinColor,
+                        0,
+                        0,
+                        0, // hairColor,
+                        0);
+#else
                     tempPlayer->Create(sObjectMgr.GeneratePlayerLowGuid(), "test", 1, 1, 0,
                         0, // skinColor,
                         0,
@@ -5516,6 +5533,7 @@ bool DebugAction::HandleTransanal(Event& event, Player* requester, const std::st
                         0, // hairColor,
                         0,
                         0);
+#endif
                     tempPlayer->AddToWorld();
                     tempPlayer->SetMap(map.get());
                     tempPlayer->SetTransport(transport);

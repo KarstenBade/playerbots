@@ -75,8 +75,13 @@ bool SeeSpellAction::Execute(Event& event)
 
     SpellCastTargets targets;
 
+#ifdef VMANGOS
+    targets.read(p);
+    WorldPosition spellPosition(requester->GetMapId(), targets.m_destX, targets.m_destY, targets.m_destZ);
+#else
     p >> targets.ReadForCaster(requester);
     WorldPosition spellPosition(requester->GetMapId(), targets.m_destPos);
+#endif
     SET_AI_VALUE(WorldPosition, "see spell location", spellPosition);
 
     if (ai->HasStrategy("debug", BotState::BOT_STATE_NON_COMBAT) || ai->HasStrategy("debug move", BotState::BOT_STATE_NON_COMBAT))

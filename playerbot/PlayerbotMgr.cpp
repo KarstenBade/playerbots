@@ -354,6 +354,24 @@ void PlayerbotHolder::JoinChatChannels(Player* bot)
 
     if (current_zone && cMgr)
     {
+#ifdef VMANGOS
+        // vmangos has no ChatChannels.dbc store; join the standard 1.12
+        // channels by their enUS names directly.
+        {
+            char buf[100];
+            snprintf(buf, 100, "General - %s", current_zone_name.c_str());
+            if (Channel* ch = cMgr->GetJoinChannel(buf)) ch->Join(bot->GetObjectGuid(), "");
+            snprintf(buf, 100, "LocalDefense - %s", current_zone_name.c_str());
+            if (Channel* ch = cMgr->GetJoinChannel(buf)) ch->Join(bot->GetObjectGuid(), "");
+            if (Channel* ch = cMgr->GetJoinChannel("WorldDefense")) ch->Join(bot->GetObjectGuid(), "");
+            if (Channel* ch = cMgr->GetJoinChannel("LookingForGroup")) ch->Join(bot->GetObjectGuid(), "");
+            std::string cityName = bot->GetPlayerbotAI()->GetLocalizedAreaName(GetAreaEntryByAreaID(ImportantAreaId::CITY));
+            snprintf(buf, 100, "Trade - %s", cityName.c_str());
+            if (Channel* ch = cMgr->GetJoinChannel(buf)) ch->Join(bot->GetObjectGuid(), "");
+            snprintf(buf, 100, "GuildRecruitment - %s", cityName.c_str());
+            if (Channel* ch = cMgr->GetJoinChannel(buf)) ch->Join(bot->GetObjectGuid(), "");
+        }
+#else
         for (uint32 i = 0; i < sChatChannelsStore.GetNumRows(); ++i)
         {
             ChatChannelsEntry const* channel = sChatChannelsStore.LookupEntry(i);
@@ -412,6 +430,7 @@ void PlayerbotHolder::JoinChatChannels(Player* bot)
             if (new_channel)
                 new_channel->Join(bot, "");
         }
+#endif
     }
 }
 
@@ -1968,6 +1987,9 @@ void PlayerbotHolder::CreateBot(Player* master, const std::string param, std::li
         name = RandomPlayerbotFactory::CreateRandomBotName(raceAndGender);
     }
 
+#ifdef VMANGOS
+    WorldSession* botSession = new WorldSession(accountId, nullptr, SEC_PLAYER, 0, LOCALE_enUS);
+#else
     WorldSession* botSession = new WorldSession(accountId, NULL, SEC_PLAYER,
 #ifdef MANGOSBOT_TWO
         2,
@@ -1984,11 +2006,16 @@ void PlayerbotHolder::CreateBot(Player* master, const std::string param, std::li
 #ifdef MANGOSBOT_ZERO
         0, LOCALE_enUS, "", 0);
 #endif
+#endif
 
         botSession->SetNoAnticheat();
 
         Player* newBot = new Player(botSession);
+#ifdef VMANGOS
+        if (!newBot->Create(sObjectMgr.GeneratePlayerLowGuid(), name, race, cls, gender, skin, face, hairStyle, hairColor, facialHair))
+#else
         if (!newBot->Create(sObjectMgr.GeneratePlayerLowGuid(), name, race, cls, gender, skin, face, hairStyle, hairColor, facialHair, 0))
+#endif
         {
             delete botSession;
             delete newBot;

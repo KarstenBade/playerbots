@@ -460,7 +460,11 @@ std::string WorldPosition::getAreaName(const bool fullName, const bool zoneName)
     {
         MapEntry const* map = sMapStore.LookupEntry(getMapId());
         if (map)
+#ifdef VMANGOS
+            return map->name; // single unlocalized name on vmangos
+#else
             return map->name[0];
+#endif
     }
 
     AreaTableEntry const* area = GetArea();
@@ -833,7 +837,13 @@ std::vector<WorldPosition> WorldPosition::frommGridPair(const mGridPair& gridPai
 
 bool WorldPosition::isVmapLoaded(uint32 mapId, int x, int y) 
 {
+#ifdef VMANGOS
+    // VMANGOS-TODO: vmangos's VMapManager has no tile-loaded query; vmaps
+    // load alongside grids, so report loaded.
+    return true;
+#else
     return VMAP::VMapFactory::createOrGetVMapManager()->IsTileLoaded(mapId, x, y);
+#endif
 }
 
 bool WorldPosition::isMmapLoaded(uint32 mapId, uint32 instanceId, int x, int y)
@@ -1182,7 +1192,11 @@ bool WorldPosition::GetReachableRandomPointOnGround(const Player* bot, const flo
 bool WorldPosition::isUnderground() const
 {
     float groundZ = getMap(getFirstInstanceId())->GetHeight(coord_x, coord_y, coord_z+0.5f, true), maxZ;
+#ifdef VMANGOS
+    maxZ = getTerrain()->GetWaterOrGroundLevel(coord_x, coord_y, coord_z + 0.5f, &groundZ, true);
+#else
     maxZ = getTerrain()->GetWaterOrGroundLevel(coord_x, coord_y, coord_z + 0.5f, groundZ, true, 1.0f);
+#endif
 
     if (maxZ > INVALID_HEIGHT)
     {
