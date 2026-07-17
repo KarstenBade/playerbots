@@ -2860,3 +2860,157 @@ std::list<std::string> PlayerbotHolder::HandleSpoof(Player* master, const std::s
     messages.push_back("Spoof set to: " + playerName + " (" + std::to_string(guid.GetCounter()) + ")");
     return messages;
 }
+
+#ifdef VMANGOS
+// Core-declared attach/detach lifecycle for the bot AI/manager members on
+// Player (the core sees the module types only as forward declarations).
+void Player::CreatePlayerbotAI()
+{
+    RemovePlayerbotAI();
+    m_playerbotAI = new PlayerbotAI(this);
+}
+
+void Player::RemovePlayerbotAI()
+{
+    delete m_playerbotAI;
+    m_playerbotAI = nullptr;
+}
+
+void Player::CreatePlayerbotMgr()
+{
+    RemovePlayerbotMgr();
+    m_playerbotMgr = new PlayerbotMgr(this);
+}
+
+void Player::RemovePlayerbotMgr()
+{
+    delete m_playerbotMgr;
+    m_playerbotMgr = nullptr;
+}
+
+// --- Bot login machinery -------------------------------------------------
+// On cmangos these live in a core patch (CharacterHandler.cpp); vmangos's
+// core is unpatched, so the module carries them. Taken from the reference
+// fork; the query list mirrors LoginQueryHolder::Initialize in
+// src/game/Handlers/CharacterHandler.cpp and must be kept in sync with the
+// vmangos characters schema.
+#include "Database/DatabaseImpl.h"
+
+// Local definition matching the one in CharacterHandler.cpp
+class PlayerbotLoginQueryHolder : public SqlQueryHolder
+{
+private:
+    uint32 m_accountId;
+    ObjectGuid m_guid;
+public:
+    PlayerbotLoginQueryHolder(uint32 accountId, ObjectGuid guid)
+        : SqlQueryHolder(guid.GetCounter()), m_accountId(accountId), m_guid(guid) { }
+    ObjectGuid GetGuid() const { return m_guid; }
+    uint32 GetAccountId() const { return m_accountId; }
+    bool Initialize();
+};
+
+bool PlayerbotLoginQueryHolder::Initialize()
+{
+    SetSize(MAX_PLAYER_LOGIN_QUERY);
+
+    bool res = true;
+
+    res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADFROM,            "SELECT `guid`, `account`, `name`, `race`, `class`, `gender`, `level`, `xp`, `money`, `skin`, `face`, `hair_style`, `hair_color`, `facial_hair`, `bank_bag_slots`, `character_flags`, "
+                     "`position_x`, `position_y`, `position_z`, `map`, `orientation`, `known_taxi_mask`, `played_time_total`, `played_time_level`, `rest_bonus`, `logout_time`, `reset_talents_multiplier`, "
+                     "`reset_talents_time`, `transport_guid`, `transport_x`, `transport_y`, `transport_z`, `transport_o`, `extra_flags`, `stable_slots`, `death_expire_time`, `current_taxi_path`, "
+                     "`honor_rank_points`, `honor_highest_rank`, `honor_standing`, `honor_last_week_hk`, `honor_last_week_cp`, `honor_stored_hk`, `honor_stored_dk`, "
+                     "`watched_faction`, `drunk`, `health`, `power1`, `power2`, `power3`, `power4`, `power5`, `explored_zones`, `ammo_id`, `action_bars`, "
+                     "`world_phase_mask`, `create_time`, `instance` FROM `characters` WHERE `guid` = '%u'", m_guid.GetCounter());
+    res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADGROUP,           "SELECT `group_id` FROM `group_member` WHERE `member_guid` ='%u'", m_guid.GetCounter());
+    res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADBOUNDINSTANCES,  "SELECT `id`, `permanent`, `map`, `reset_time` FROM `character_instance` LEFT JOIN `instance` ON `instance` = `id` WHERE `guid` = '%u'", m_guid.GetCounter());
+    res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADAURAS,           "SELECT `caster_guid`, `item_guid`, `spell`, `stacks`, `charges`, `base_points0`, `base_points1`, `base_points2`, `periodic_time0`, `periodic_time1`, `periodic_time2`, `max_duration`, `duration`, `effect_index_mask` FROM `character_aura` WHERE `guid` = '%u'", m_guid.GetCounter());
+    res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADSPELLS,          "SELECT `spell`, `active`, `disabled` FROM `character_spell` WHERE `guid` = '%u'", m_guid.GetCounter());
+    res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADQUESTSTATUS,     "SELECT `quest`, `status`, `rewarded`, `explored`, `timer`, `mob_count1`, `mob_count2`, `mob_count3`, `mob_count4`, `item_count1`, `item_count2`, `item_count3`, `item_count4`, `reward_choice` FROM `character_queststatus` WHERE `guid` = '%u'", m_guid.GetCounter());
+    res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADHONORCP,         "SELECT `victim_type`, `victim_id`, `cp`, `date`, `type` FROM `character_honor_cp` WHERE `guid` = '%u'", m_guid.GetCounter());
+    res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADREPUTATION,      "SELECT `faction`, `standing`, `flags` FROM `character_reputation` WHERE `guid` = '%u'", m_guid.GetCounter());
+    res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADINVENTORY,       "SELECT * FROM (SELECT `creator_guid`, `gift_creator_guid`, `count`, `duration`, `charges`, `flags`, `enchantments`, `random_property_id`, `durability`, `text`, `bag`, `slot`, `item_guid`, `item_instance`.`item_id`, `generated_loot` FROM `character_inventory` JOIN `item_instance` ON `character_inventory`.`item_guid` = `item_instance`.`guid` WHERE `character_inventory`.`guid` = '%u') as t ORDER BY `bag`, `slot`", m_guid.GetCounter());
+    res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADITEMLOOT,        "SELECT `guid`, `item_id`, `amount`, `property` FROM `item_loot` WHERE `owner_guid` = '%u'", m_guid.GetCounter());
+    res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADACTIONS,         "SELECT `button`, `action`, `type` FROM `character_action` WHERE `guid` = '%u' ORDER BY `button`", m_guid.GetCounter());
+    res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADSOCIALLIST,      "SELECT `friend`, `flags` FROM `character_social` WHERE `guid` = '%u' LIMIT 255", m_guid.GetCounter());
+    res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADHOMEBIND,        "SELECT `map`, `zone`, `position_x`, `position_y`, `position_z` FROM `character_homebind` WHERE `guid` = '%u'", m_guid.GetCounter());
+    res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADSPELLCOOLDOWNS,  "SELECT `spell`, `spell_expire_time`, `category`, `category_expire_time`, `item_id` FROM `character_spell_cooldown` WHERE `guid` = '%u'", m_guid.GetCounter());
+    res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADGUILD,           "SELECT `guild_id`, `rank` FROM `guild_member` WHERE `guid` = '%u'", m_guid.GetCounter());
+    res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADBGDATA,          "SELECT `instance_id`, `team`, `join_x`, `join_y`, `join_z`, `join_o`, `join_map` FROM `character_battleground_data` WHERE `guid` = '%u'", m_guid.GetCounter());
+    res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADACCOUNTDATA,     "SELECT `type`, `time`, `data` FROM `character_account_data` WHERE `guid`='%u'", m_guid.GetCounter());
+    res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADSKILLS,          "SELECT `skill`, `value`, `max` FROM `character_skills` WHERE `guid` = '%u'", m_guid.GetCounter());
+    res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADMAILS,           "SELECT `id`, `message_type`, `sender_guid`, `receiver_guid`, `subject`, `item_text_id`, `expire_time`, `deliver_time`, `money`, `cod`, `checked`, `stationery`, `mail_template_id`, `has_items` FROM `mail` WHERE `receiver_guid` = '%u' ORDER BY `id` DESC", m_guid.GetCounter());
+    res &= SetPQuery(PLAYER_LOGIN_QUERY_LOADMAILEDITEMS,     "SELECT `creator_guid`, `gift_creator_guid`, `count`, `duration`, `charges`, `flags`, `enchantments`, `random_property_id`, `durability`, `text`, `mail_id`, `item_guid`, `item_instance`.`item_id`, `generated_loot` FROM `mail_items` JOIN `item_instance` ON `item_guid` = `guid` WHERE `receiver_guid` = '%u'", m_guid.GetCounter());
+    res &= SetPQuery(PLAYER_LOGIN_QUERY_FORGOTTEN_SKILLS,    "SELECT `skill`, `value` FROM `character_forgotten_skills` WHERE `guid` = '%u'", m_guid.GetCounter());
+
+    return res;
+}
+
+void PlayerbotHolder::AddPlayerBot(uint32 playerGuid, uint32 masterAccountId)
+{
+    // has bot already been added?
+    ObjectGuid guid = ObjectGuid(HIGHGUID_PLAYER, playerGuid);
+    Player* bot = sObjectMgr.GetPlayer(guid);
+
+    if (bot && bot->IsInWorld())
+        return;
+
+    uint32 accountId = sObjectMgr.GetPlayerAccountIdByGUID(guid);
+    if (accountId == 0)
+        return;
+
+    PlayerbotLoginQueryHolder* holder = new PlayerbotLoginQueryHolder(accountId, guid);
+    if (!holder->Initialize())
+    {
+        delete holder;
+        return;
+    }
+
+    CharacterDatabase.DelayQueryHolder(this, &PlayerbotHolder::HandlePlayerBotLoginCallback, holder);
+}
+
+void PlayerbotHolder::HandlePlayerBotLoginCallback(std::unique_ptr<QueryResult> /*dummy*/, SqlQueryHolder* holder)
+{
+    if (!holder)
+        return;
+
+    PlayerbotLoginQueryHolder* lqh = (PlayerbotLoginQueryHolder*)holder;
+    uint32 botAccountId = lqh->GetAccountId();
+    ObjectGuid botGuid = lqh->GetGuid();
+
+    // has bot already been added?
+    if (sObjectMgr.GetPlayer(botGuid))
+    {
+        delete holder;
+        return;
+    }
+
+    WorldSession* botSession = new WorldSession(botAccountId, std::shared_ptr<WorldSocket>(), SEC_PLAYER, 0, LOCALE_enUS);
+
+    // HandlePlayerLogin checks m_playerLoading and bails out if it's false.
+    // Normally LoginPlayer() sets this before the async query, but we call
+    // HandlePlayerLogin directly after our own async query completes.
+    botSession->SetPlayerLoading(true);
+
+    // HandlePlayerLogin expects a LoginQueryHolder*, but our PlayerbotLoginQueryHolder
+    // has the same layout. We cast through the base SqlQueryHolder.
+    botSession->HandlePlayerLogin((LoginQueryHolder*)lqh); // will delete lqh
+
+    Player* bot = botSession->GetPlayer();
+    if (!bot)
+    {
+        sLog.Out(LOG_BASIC, LOG_LVL_ERROR, "Error logging in bot guid %u, please try to reset all random bots", botGuid.GetCounter());
+        delete botSession;
+        return;
+    }
+
+    OnBotLogin(bot);
+
+    // Register the bot with RandomPlayerbotMgr after OnBotLogin has set up
+    // PlayerbotAI. We only do the bookkeeping part here (IsFreeBot/players map).
+    // We must NOT call the full OnPlayerLogin which iterates existing bots and
+    // calls ResetStrategies() on them, because this callback runs on a DB
+    // worker thread and would corrupt engine data accessed by the map thread.
+    sRandomPlayerbotMgr.OnBotLoginRegistration(bot);
+}
+#endif

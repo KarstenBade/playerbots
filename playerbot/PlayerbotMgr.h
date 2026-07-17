@@ -24,7 +24,11 @@ public:
     virtual ~PlayerbotHolder();
 
     void AddPlayerBot(uint32 guid, uint32 masterAccountId);
+#ifdef VMANGOS
+	void HandlePlayerBotLoginCallback(std::unique_ptr<QueryResult> dummy, SqlQueryHolder * holder);
+#else
 	void HandlePlayerBotLoginCallback(QueryResult * dummy, SqlQueryHolder * holder);
+#endif
 
     void LogoutPlayerBot(uint32 guid, bool allowInstant = true, bool forDelete = false);
     void DisablePlayerBot(uint32 guid, bool logOutPlayer = true);

@@ -99,6 +99,11 @@ public:
         void OnPlayerLoginError(uint32 bot);
         Player* GetRandomPlayer();
         PlayerBotMap& GetPlayers() { return players; };
+#ifdef VMANGOS
+        // Thread-safe(ish) bookkeeping part of OnPlayerLogin, callable from
+        // the DB-callback bot login path (defined in RandomPlayerbotMgr.cpp).
+        void OnBotLoginRegistration(Player* player);
+#endif
         Player* GetPlayer(uint32 playerGuid);
         void PrintStats(uint32 requesterGuid);
         double GetBuyMultiplier(Player* bot);

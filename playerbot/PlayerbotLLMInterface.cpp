@@ -12,6 +12,31 @@
 #include <chrono>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+
+#ifdef VMANGOS_NO_LIBSSL
+// vmangos's bundled Windows OpenSSL ships only libcrypto (libeay32.lib);
+// there is no libssl import library to link. Provide failing stubs for the
+// libssl entry points used below so the module still links: SSL_CTX_new()
+// returns nullptr, which makes the HTTPS path bail out through the existing
+// "Failed to create SSL context" error. Plain-HTTP endpoints still work.
+extern "C" {
+int SSL_library_init(void) { return 1; }
+void SSL_load_error_strings(void) { }
+const SSL_METHOD* SSLv23_client_method(void) { return nullptr; }
+SSL_CTX* SSL_CTX_new(const SSL_METHOD*) { return nullptr; }
+void SSL_CTX_free(SSL_CTX*) { }
+long SSL_CTX_ctrl(SSL_CTX*, int, long, void*) { return 0; }
+SSL* SSL_new(SSL_CTX*) { return nullptr; }
+void SSL_free(SSL*) { }
+int SSL_set_fd(SSL*, int) { return 0; }
+int SSL_connect(SSL*) { return -1; }
+int SSL_read(SSL*, void*, int) { return -1; }
+int SSL_write(SSL*, const void*, int) { return -1; }
+int SSL_get_error(const SSL*, int) { return SSL_ERROR_SSL; }
+int SSL_shutdown(SSL*) { return 0; }
+long SSL_ctrl(SSL*, int, long, void*) { return 0; }
+}
+#endif // VMANGOS_NO_LIBSSL
 #include <thread>
 #include "Log/Log.h"
 #include "PlayerbotAIConfig.h"
@@ -800,3 +825,8 @@ void PlayerbotLLMInterface::LimitContext(std::string& context, int currentLength
         }
     }
 }
+
+#ifdef VMANGOS
+// See TravelMgr.cpp: vmangos's Singleton needs an explicit instantiation.
+INSTANTIATE_SINGLETON_1(PlayerbotLLMInterface);
+#endif

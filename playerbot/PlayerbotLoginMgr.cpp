@@ -768,3 +768,7 @@ uint32 PlayerBotLoginMgr::GetLevelBucketSize(uint32 level)
     return GetMaxOnlineBotCount() * sPlayerbotAIConfig.levelProbability[level] / levelProbabilityTotal;
 }
 
+#ifdef VMANGOS
+// See TravelMgr.cpp: vmangos's Singleton needs an explicit instantiation.
+INSTANTIATE_SINGLETON_1(ai::PlayerBotLoginMgr);
+#endif

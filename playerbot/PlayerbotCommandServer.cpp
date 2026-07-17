@@ -11,7 +11,11 @@ INSTANTIATE_SINGLETON_1(PlayerbotCommandServer);
 #include <boost/bind/bind.hpp>
 #include <boost/smart_ptr.hpp>
 #include <boost/asio.hpp>
+#ifdef VMANGOS
+#include <thread> // boost::thread would autolink a boost library vmangos doesn't ship
+#else
 #include <boost/thread/thread.hpp>
+#endif
 
 using boost::asio::ip::tcp;
 typedef boost::shared_ptr<tcp::socket> socket_ptr;
@@ -63,7 +67,11 @@ void server(boost::asio::io_context& io_context, short port)
     {
         socket_ptr sock(new tcp::socket(io_context));
         a.accept(*sock);
+#ifdef VMANGOS
+        std::thread(session, sock).detach();
+#else
         boost::thread t(boost::bind(session, sock));
+#endif
     }
 }
 

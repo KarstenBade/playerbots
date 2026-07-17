@@ -139,6 +139,11 @@ if (VMANGOS)
   if (MSVC)
     add_compile_options(/Zm256)
   endif()
+  # vmangos's bundled Windows OpenSSL is libcrypto-only (libeay32.lib, no
+  # libssl); PlayerbotLLMInterface.cpp stubs the libssl entry points instead.
+  if (WIN32)
+    add_definitions(-DVMANGOS_NO_LIBSSL)
+  endif()
 else()
 # <<< VMANGOS
 # Define Core
@@ -184,6 +189,12 @@ target_link_libraries(${LIBRARY_NAME}
   PRIVATE g3dlite
   PRIVATE zlib
 )
+# >>> VMANGOS: the LLM interface speaks HTTPS via libssl; vmangos itself only
+# links libcrypto.
+if (VMANGOS AND OPENSSL_FOUND)
+  target_link_libraries(${LIBRARY_NAME} PUBLIC ${OPENSSL_LIBRARIES})
+endif()
+# <<< VMANGOS
 if(WIN32)
   target_link_libraries(${LIBRARY_NAME}
     PRIVATE ws2_32

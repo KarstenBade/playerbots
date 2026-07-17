@@ -2934,3 +2934,10 @@ float TravelMgr::MapTransDistance(const WorldPosition& start, const WorldPositio
 
     return sqrt(minsqDist);
 }
+
+#ifdef VMANGOS
+// cmangos defines MaNGOS::Singleton's statics in the header; vmangos's
+// Singleton needs an explicit instantiation in one TU per type.
+INSTANTIATE_SINGLETON_1(ai::TravelMgr);
+INSTANTIATE_SINGLETON_1(ai::SharedObjectContext);
+#endif

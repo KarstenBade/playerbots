@@ -3903,3 +3903,8 @@ WorldPosition TravelNodeMap::getMapOffset(uint32 mapId)
 
     return WorldPosition(mapId, 0, 0, 0, 0);
 }
+
+#ifdef VMANGOS
+// See TravelMgr.cpp: vmangos's Singleton needs an explicit instantiation.
+INSTANTIATE_SINGLETON_1(ai::TravelNodeMap);
+#endif

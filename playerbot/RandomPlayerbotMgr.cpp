@@ -51,7 +51,11 @@ using namespace MaNGOS;
 INSTANTIATE_SINGLETON_1(RandomPlayerbotMgr);
 
 #ifdef CMANGOS
+#ifdef VMANGOS
+#include <thread> // boost::thread would autolink a boost library vmangos doesn't ship
+#else
 #include <boost/thread/thread.hpp>
+#endif
 #endif
 
 #ifdef MANGOS
@@ -75,8 +79,13 @@ void activatePrintStatsThread(uint32 requesterGuid)
     thread->activate();
 #endif
 #ifdef CMANGOS
+#ifdef VMANGOS
+    std::thread t(PrintStatsThread, requesterGuid);
+    t.detach();
+#else
     boost::thread t(PrintStatsThread, requesterGuid);
     t.detach();
+#endif
 #endif
 }
 
@@ -101,8 +110,13 @@ void activateCheckBgQueueThread()
     thread->activate();
 #endif
 #ifdef CMANGOS
+#ifdef VMANGOS
+    std::thread t(CheckBgQueueThread);
+    t.detach();
+#else
     boost::thread t(CheckBgQueueThread);
     t.detach();
+#endif
 #endif
 }
 
@@ -127,8 +141,13 @@ void activateCheckLfgQueueThread()
     thread->activate();
 #endif
 #ifdef CMANGOS
+#ifdef VMANGOS
+    std::thread t(CheckLfgQueueThread);
+    t.detach();
+#else
     boost::thread t(CheckLfgQueueThread);
     t.detach();
+#endif
 #endif
 }
 
@@ -153,8 +172,13 @@ void activateCheckPlayersThread()
     thread->activate();
 #endif
 #ifdef CMANGOS
+#ifdef VMANGOS
+    std::thread t(CheckPlayersThread);
+    t.detach();
+#else
     boost::thread t(CheckPlayersThread);
     t.detach();
+#endif
 #endif
 }
 
@@ -4629,8 +4653,13 @@ std::list<std::string> RandomPlayerbotMgr::HandleConsoleCleanMap(std::string par
             continue;
 
         uint32 mapId = sMapStore.LookupEntry(i)->MapID;
+#ifdef VMANGOS
+        std::thread t([mapId]() {WorldPosition::unloadMapAndVMaps(mapId); });
+        t.detach();
+#else
         boost::thread t([mapId]() {WorldPosition::unloadMapAndVMaps(mapId); });
         t.detach();
+#endif
     }
 
     std::string msg = "Map cleaning initiated.";
@@ -4758,3 +4787,22 @@ void RandomPlayerbotMgr::OnBotDeleted(uint32 botGuid, uint32 accountId)
         }
     }
 }
+#ifdef VMANGOS
+// Bookkeeping half of OnPlayerLogin for the direct bot-login callback path
+// (mirrors the reference fork; the full OnPlayerLogin resets strategies on
+// other bots, which is unsafe from the DB worker thread).
+void RandomPlayerbotMgr::OnBotLoginRegistration(Player* player)
+{
+    if (IsFreeBot(player))
+    {
+        uint32 guid = player->GetGUIDLow();
+        if (!sPlayerbotAIConfig.IsFreeAltBot(player))
+            SetEventValue(guid, "login", 0, 0);
+    }
+    else
+    {
+        players[player->GetGUIDLow()] = player;
+        sLog.outDetail("Including non-random bot player %s into random bot update", player->GetName());
+    }
+}
+#endif
