@@ -1,9 +1,31 @@
 # VMANGOS port — remaining work & stubbed features
 
-Status: **DONE building** — `playerbots.lib` compiles with 0 errors and
-`mangosd.exe` links with 0 errors (Debug x64, build_mangosd8.log,
-2026-07-17). Next phase is runtime smoke: `.bot add`, random-bot login,
-then feature-by-feature triage of the stubbed ledger below.
+Status: **RUNTIME SMOKE PASSED** (2026-07-17) — builds clean AND random
+bots create accounts/characters, persist them, log in, and enter the
+world (6 bots online in an isolated test env; see "Session 5 runtime
+fixes" below). Next: `.bot add` with a real client/master, bot behavior
+observation, then feature-by-feature triage of the stubbed ledger.
+
+Test env: `C:mangos-server-playerbot-integration` (world port 8086),
+private MySQL 8.4 on port 3307 (datadir `mysql-data/` in that folder,
+root, empty password; `--mysql-native-password=ON` required), Data
+junctioned from `C:mangos-server-dev\Data`. The dev server and its
+databases on port 3306 were never touched.
+
+## Session 5 runtime fixes (crash-loop phase, all committed)
+
+Debugging used `minidebug.exe` (scratchpad; DbgHelp debug-loop harness
+that symbolizes fatal stacks — vmangos's own handler misses fastfails).
+In order of discovery: cmangos SQL column names (creature_template,
+item_template, characters, guild — see commit 62e5cc95); GetAreaLevel
+stack overflow on self-referencing area 5091 (cycle guards + pre-filled
+ai_playerbot_zone_level); playerbots init moved after MovementBroadcaster
+creation (Player::Create → speed aura → broadcaster null deref);
+LoadTrainers now populates learnedSpell (TrainerValues dereferenced it);
+LootLootGroupAccess stride (vmangos LootGroup has a trailing bool);
+GetEventValue null-safe reads; bot chars: SetSaveDisabled(false) +
+InsertPlayerInCache (vmangos Create path is temp-bot flagged and
+guid->account resolution is cache-based).
 
 **Reference "answer key"**: the user's fork of a working (but destructively
 rewritten) vmangos+ike3 integration —
