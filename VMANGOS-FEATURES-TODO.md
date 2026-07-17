@@ -1,10 +1,9 @@
 # VMANGOS port — remaining work & stubbed features
 
-Status: full `.cpp` build is at **872 raw error lines / 685 distinct sites**
-(build_current13.log), down from 1859 raw at the start of session 3 and 5876
-once the PCH first compiled. Regenerate the census with
-`python census13.py`-style parsing or:
-`grep -oE 'error C[0-9]+: "[^"]+"' build_currentN.log | sort | uniq -c | sort -rn`.
+Status: **DONE building** — `playerbots.lib` compiles with 0 errors and
+`mangosd.exe` links with 0 errors (Debug x64, build_mangosd8.log,
+2026-07-17). Next phase is runtime smoke: `.bot add`, random-bot login,
+then feature-by-feature triage of the stubbed ledger below.
 
 **Reference "answer key"**: the user's fork of a working (but destructively
 rewritten) vmangos+ike3 integration —
@@ -83,44 +82,36 @@ scratch clone; deliberately NOT a submodule.
    ENABLE_PLAYERBOTS; Player std::string chat overloads (Say/Yell/TextEmote/
    Whisper).
 
-## Remaining (build_current13.log census, 685 distinct sites)
+## Cleared in session 4 (link phase)
 
-Top identifier clusters (many onesies not listed — regenerate for detail):
+All census categories from session 3 were driven to zero (private Player
+internals via public access windows, ObjectMgr::GetPlayer, RNG, TeamIndex,
+Config default-args, BG brackets, packet ref-vs-ptr, renames, urand, etc. —
+see git log). Then the mangosd link:
 
-- **Syntax cascades** C2143 (31) / C2059 (23) / C2146 (11) / C2062 (9) —
-  mostly follow-ons from the categories below; re-census after fixing them.
-- **Private Player internals**: `CalculateTalentsPoints` (10), `m_taxi` (8),
-  `SetQuestSlot` (5) — publicize under ENABLE_PLAYERBOTS (GetQuestSlotQuestId
-  precedent) or add accessors.
-- **`ObjectMgr::GetPlayer`** (11) — vmangos: `sObjectAccessor.FindPlayer` /
-  `ObjectAccessor::FindPlayer`; route per-site or compat macro.
-- **RNG**: `GetRandomGenerator` (8) + `std::shuffle` (8) — cmangos exposes a
-  world RNG; use a compat `std::mt19937` instance.
-- **`GetTeamIndexByTeamId`** (7) — vmangos equivalent/`TeamId` mapping.
-- **`Config::GetStringDefault` 1-arg** (7) + `GetIntDefault` (5) — vmangos
-  requires the default argument; per-site.
-- **`GetBattleGroundBracketIdFromLevel`** (6) — vmangos BG bracket API differs.
-- **`WorldSession::SendPacket`/`SendMessageToSet`/`MessageBroadcast`
-  ref-vs-pointer** (6+6+4) — vmangos takes `WorldPacket*`.
-- **`SetReactState`** (6) — vmangos Creature has ReactState? per-site/alias.
-- **`GetLootState`** (6) — GameObject `GetGoState`/loot state rename.
-- **`strcmpi(std::string, ...)`** (6) — more SpellName-style std::string sites.
-- **`urand` overloads** (6), **`KilledMonster(CreatureInfo const*, guid)`**
-  (5), **`GetSpellStore`** (5), **`MailItemInfo::item_guid`** (5),
-  **`GetTrainerSpellState`** (5), **`Buff_Entries`** (4, BG buff GO ids —
-  fork defines `{179871,179904,179905}`), **`exploreFlag`** (4),
-  **`PathInfo::PathInfo`** (4 more unit-less ctor sites), plus long tail.
-- **Biggest files**: RandomPlayerbotFactory.cpp (72), LfgActions.cpp (58),
-  BattleGroundTactics.cpp (40), PlayerbotAI.cpp (39 — site list parsed in
-  session 3: countof, SendPacket, SetCorpseAccelerationDelay/
-  ReduceCorpseDecayTimer, GetDbGuid, MINIMUM_LOOTING_TIME, IsEncounter,
-  CreateAura/CreateSpellAuraHolder signatures, TAXI/FALL_MOTION_TYPE,
-  GetAngleAt, CanBeInterrupted, CanNoReagentCast, HasRealPlayers/HasActiveZone,
-  HasCharm, GetMaster, Release, GetState, SetFallInformation, GetPowerPercent,
-  RemoveGameObject, SetFacingTo, AnyUnfriendlyUnitInObjectRangeCheck ctor),
-  DebugAction.cpp (37), TravelNode.cpp (36), ItemUsageValue.cpp (33),
-  RandomPlayerbotMgr.cpp (31, incl. AuctionHouseMgr GetAuctionsMap shape),
-  PlayerbotFactory.cpp (31).
+1. **vPath_* duplicate symbols** vs vmangos's native BattleBotWaypoints.cpp →
+   79 `#define vPath_X bot_vPath_X` renames in BattleGroundTactics.h.
+2. **boost::thread autolink** (no libboost_thread in vmangos deps) →
+   std::thread arms in RandomPlayerbotMgr.cpp / PlayerbotCommandServer.cpp.
+3. **Bot login machinery** (`PlayerbotHolder::AddPlayerBot`,
+   `HandlePlayerBotLoginCallback`) — cmangos patches these into core;
+   here they live module-side in PlayerbotMgr.cpp under VMANGOS:
+   `PlayerbotLoginQueryHolder` mirrors `LoginQueryHolder::Initialize`
+   (CharacterHandler.cpp) and **must be kept in sync with the vmangos
+   characters schema**; callback builds a socketless WorldSession, sets
+   `SetPlayerLoading(true)` (guarded core setter), calls `HandlePlayerLogin`,
+   then `OnBotLogin` + `RandomPlayerbotMgr::OnBotLoginRegistration` (only the
+   bookkeeping half of OnPlayerLogin — the full one resets strategies on
+   other bots, unsafe from the DB worker thread).
+4. **Singleton statics**: vmangos's `MaNGOS::Singleton` needs
+   `INSTANTIATE_SINGLETON_1` per type (cmangos's doesn't) — added under
+   VMANGOS for TravelMgr, TravelNodeMap, SharedObjectContext,
+   PlayerbotLLMInterface, PlayerBotLoginMgr.
+5. **libssl**: vmangos's bundled Windows OpenSSL is libcrypto-only
+   (libeay32.lib). PlayerbotLLMInterface.cpp stubs the 15 libssl entry
+   points under `VMANGOS_NO_LIBSSL` (defined by the module CMake on WIN32):
+   HTTPS LLM endpoints fail gracefully at SSL_CTX_new, plain HTTP works.
+   On platforms with OPENSSL_FOUND, real OpenSSL is linked instead.
 
 ## Stubbed features ledger (compile as safe no-ops; marked `VMANGOS-TODO`)
 
@@ -139,3 +130,5 @@ Top identifier clusters (many onesies not listed — regenerate for detail):
 | EmotesTextSound | compat stub | bot emote sounds silent |
 | WorldSession::HandleBotPackets | PlayerbotMgr.cpp guard | normal session-update path |
 | Gossip text / locale-string fillers | compat GossipText + no-op fillers | unchanged from session 2 |
+| HTTPS LLM endpoints (Windows) | PlayerbotLLMInterface.cpp `VMANGOS_NO_LIBSSL` | no libssl in vmangos Windows deps; HTTP works |
+| Full OnPlayerLogin on bot login | RandomPlayerbotMgr::OnBotLoginRegistration | strategy reset of other bots skipped (thread safety) |
