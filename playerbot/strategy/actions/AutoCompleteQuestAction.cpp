@@ -94,7 +94,7 @@ bool AutoCompleteQuestAction::Execute(Event& event)
             {
                 if (CreatureInfo const* cInfo = VMANGOS_GET_CREATURE_TEMPLATE(creature))
                     for (uint16 z = 0; z < creaturecount; ++z)
-                        bot->KilledMonster(cInfo, nullptr);
+                        bot->KilledMonster(cInfo, ObjectGuid());
             }
             else if (creature < 0)
             {

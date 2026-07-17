@@ -289,6 +289,30 @@ bool RandomPlayerbotFactory::CreateRandomBot(uint8 cls, uint8 inputRace)
 
     std::vector<uint8> skinColors, facialHairTypes;
     std::vector<std::pair<uint8,uint8>> faces, hairs;
+#ifdef VMANGOS
+    // vmangos loads CharSections.dbc and exposes the valid variation/color
+    // pairs directly (there is no sCharSectionMap multimap to walk). Facial
+    // hair uses the variation index (as in the reference fork's
+    // Player::SelectRandomAppearance).
+    {
+        std::vector<std::pair<uint8, uint8>> pairs;
+        GetAllValidCharSectionVariationAndColorPairs(race, SECTION_TYPE_SKIN, gender, pairs);
+        for (const auto& p : pairs)
+            skinColors.push_back(p.second);
+        pairs.clear();
+        GetAllValidCharSectionVariationAndColorPairs(race, SECTION_TYPE_FACE, gender, pairs);
+        for (const auto& p : pairs)
+            faces.push_back(p);
+        pairs.clear();
+        GetAllValidCharSectionVariationAndColorPairs(race, SECTION_TYPE_FACIAL_HAIR, gender, pairs);
+        for (const auto& p : pairs)
+            facialHairTypes.push_back(p.first);
+        pairs.clear();
+        GetAllValidCharSectionVariationAndColorPairs(race, SECTION_TYPE_HAIR, gender, pairs);
+        for (const auto& p : pairs)
+            hairs.push_back(p);
+    }
+#else
     for (CharSectionsMap::const_iterator itr = sCharSectionMap.begin(); itr != sCharSectionMap.end(); ++itr)
     {
         CharSectionsEntry const* entry = itr->second;
@@ -329,6 +353,10 @@ bool RandomPlayerbotFactory::CreateRandomBot(uint8 cls, uint8 inputRace)
         }
 #endif
     }
+#endif // VMANGOS
+
+    if (skinColors.empty() || faces.empty() || hairs.empty())
+        return false;
 
     uint8 skinColor = skinColors[urand(0, skinColors.size() - 1)];
     std::pair<uint8,uint8> face = faces[urand(0, faces.size() - 1)];
@@ -336,7 +364,7 @@ bool RandomPlayerbotFactory::CreateRandomBot(uint8 cls, uint8 inputRace)
 
 	bool excludeCheck = (race == RACE_TAUREN) || (gender == GENDER_FEMALE && race != RACE_NIGHTELF && race != RACE_UNDEAD);
 #ifndef MANGOSBOT_TWO
-	uint8 facialHair = excludeCheck ? 0 : facialHairTypes[urand(0, facialHairTypes.size() - 1)];
+	uint8 facialHair = (excludeCheck || facialHairTypes.empty()) ? 0 : facialHairTypes[urand(0, facialHairTypes.size() - 1)];
 #else
 	uint8 facialHair = 0;
 #endif

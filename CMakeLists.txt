@@ -134,6 +134,11 @@ if (VMANGOS)
   # path (the if(PCH) blocks below) so botpch.h front-loads STL and core
   # headers into every TU, as on cmangos.
   set(PCH ON)
+  # botpch.h + the vmangos compat surface exceed MSVC's default precompiled-
+  # header memory limit (C1076/C3859); raise it.
+  if (MSVC)
+    add_compile_options(/Zm256)
+  endif()
 else()
 # <<< VMANGOS
 # Define Core
