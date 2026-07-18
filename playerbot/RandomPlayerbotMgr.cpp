@@ -2818,6 +2818,7 @@ void RandomPlayerbotMgr::PrepareTeleportCache()
     if (results)
     {
         sLog.outString("Loading random teleport caches for %d levels...", maxLevel);
+        uint16 highestCachedLevel = 0;
         do
         {
             Field* fields = results->Fetch();
@@ -2828,9 +2829,22 @@ void RandomPlayerbotMgr::PrepareTeleportCache()
             uint16 level = fields[4].GetUInt16();
             WorldLocation loc(mapId, x, y, z, 0);
             locsPerLevelCache[level].push_back(loc);
+            if (level > highestCachedLevel)
+                highestCachedLevel = level;
         } while (results->NextRow());
+
+        // A crash during the initial build leaves a silently-partial cache
+        // (seen: only levels 1-17 persisted; level-60 bots then get
+        // "no locations available" forever). Detect and rebuild.
+        if (highestCachedLevel < maxLevel)
+        {
+            sLog.outString("Teleport cache is partial (up to level %u, need %u) - rebuilding.", highestCachedLevel, maxLevel);
+            CharacterDatabase.DirectExecute("TRUNCATE TABLE `ai_playerbot_tele_cache`");
+            locsPerLevelCache.clear();
+            results = nullptr;
+        }
     }
-    else
+    if (!results)
     {
         sLog.outString("Preparing random teleport caches for %d levels...", maxLevel);
         BarGoLink bar(maxLevel);
