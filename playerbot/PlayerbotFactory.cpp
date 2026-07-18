@@ -4296,7 +4296,18 @@ void PlayerbotFactory::SetRandomSkill(uint16 id)
     if (!pSkill)
         return;
 
+#ifdef VMANGOS
+    // vmangos GetSkillRangeType takes a SkillRaceClassInfoEntry*, not
+    // cmangos's bool - passing false crashed on a null deref. Looking the
+    // entry up also skips skills this race/class cannot have.
+    SkillRaceClassInfoEntry const* rcEntry = GetSkillRaceClassInfo(id, bot->GetRace(), bot->GetClass());
+    if (!rcEntry)
+        return;
+
+    SkillRangeType skillType = GetSkillRangeType(pSkill, rcEntry);
+#else
     SkillRangeType skillType = GetSkillRangeType(pSkill, false);
+#endif
 
     // if this is not a profession type of skill or skill that is 1/1
     if (skillType != SKILL_RANGE_LEVEL && skillType != SKILL_RANGE_MONO)
