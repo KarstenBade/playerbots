@@ -2386,9 +2386,12 @@ bool MovementAction::Follow(Unit* target, float distance, float angle)
 
             if (player->IsTaxiFlying()) //Move to where the player is flying to.
             {
-#ifndef VMANGOS
-                // VMANGOS-TODO: no Taxi::Map flight-spline query in vmangos, so
-                // bots can't chase a flying master's destination here.
+#ifdef VMANGOS
+                // Head for the final node of the master's queued flight.
+                if (uint32 destNode = player->GetTaxi().GetFinalTaxiDestination())
+                    if (TaxiNodesEntry const* node = sObjectMgr.GetTaxiNodeEntry(destNode))
+                        return MoveTo(node->map_id, node->x, node->y, node->z);
+#else
                 const Taxi::Map tMap = player->GetTaxiPathSpline();
                 if (!tMap.empty())
                 {
