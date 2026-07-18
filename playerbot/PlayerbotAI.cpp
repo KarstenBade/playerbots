@@ -143,6 +143,15 @@ PlayerbotAI::PlayerbotAI(Player* bot) :
 
     aiObjectContext = AiFactory::createAiObjectContext(bot, this);
 
+#ifdef VMANGOS
+    // Pre-create the "last said" value here on the owning thread:
+    // HandleBotOutgoingPacket reads/writes it synchronously for
+    // SMSG_MESSAGECHAT, which can arrive from another map's thread; without
+    // pre-creation the first such access lazily inserts into the value
+    // context concurrently with the bot's own tick.
+    aiObjectContext->GetValue<time_t>("last said", "chat");
+#endif
+
     UpdateTalentSpec();
 
     engines[(uint8)BotState::BOT_STATE_COMBAT] = AiFactory::createCombatEngine(bot, this, aiObjectContext);
@@ -7831,7 +7840,8 @@ void PlayerbotAI::AccelerateRespawn(Creature* creature, float accelMod)
         CreatureInfo const* cinfo = creature->GetCreatureInfo();
 
 #ifdef VMANGOS
-        // vmangos CreatureInfo has no per-template corpse-delay override field.
+        // vmangos creature_template has no corpse-delay override column
+        // (schema verified) - only the encounter branch below applies.
         if (false)
             defaultDelay = 0;
 #else
@@ -7839,7 +7849,8 @@ void PlayerbotAI::AccelerateRespawn(Creature* creature, float accelMod)
             defaultDelay = cinfo->CorpseDelay;
 #endif
 #ifdef VMANGOS
-        else if (false) // VMANGOS-TODO: no dungeon-encounter registry on vmangos
+        // no encounter registry in vmangos; treat dungeon elites+ as bosses
+        else if (creature->GetMap()->IsDungeon() && cinfo->rank >= CREATURE_ELITE_ELITE)
 #else
         else if (sObjectMgr.IsEncounter(creature->GetEntry(), creature->GetMapId()))
 #endif

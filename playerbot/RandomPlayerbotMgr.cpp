@@ -2856,13 +2856,17 @@ void RandomPlayerbotMgr::PrepareTeleportCache()
         for (uint8 level = 1; level <= maxLevel; level++)
         {
 #ifdef VMANGOS
-            // vmangos creature_template columns; the cmangos extraFlags/
-            // unitFlags exclusions (guards, triggers) have no direct
-            // equivalent here. VMANGOS-TODO: filter via static_flags.
+            // vmangos dialect of the cmangos exclusions: guard (extraFlags
+            // 1024 -> flags_extra 0x400), civilian (extraFlags 65536 ->
+            // civilian column), no-XP kills (extraFlags 64 -> static_flags1
+            // 0x2), immune to PC/NPC (unitFlags 256/512 -> static_flags1
+            // 0x20/0x40).
             auto results = WorldDatabase.PQuery("SELECT `map`, `position_x`, `position_y`, `position_z` "
                 "FROM (SELECT `map`, `position_x`, `position_y`, `position_z`, t.level_max, t.level_min, "
                 "%u - (t.level_max + t.level_min) / 2 delta "
-                "FROM creature c INNER JOIN creature_template t ON c.id = t.entry WHERE t.type != 8 AND t.npc_flags = 0 AND t.rank = 0 AND t.loot_id != 0) q "
+                "FROM creature c INNER JOIN creature_template t ON c.id = t.entry WHERE t.type != 8 AND t.npc_flags = 0 AND t.rank = 0 "
+                "AND t.civilian = 0 AND (t.flags_extra & 1024) = 0 AND (t.static_flags1 & (2 | 32 | 64)) = 0 "
+                "AND t.loot_id != 0) q "
                 "WHERE delta >= 0 AND delta <= %u AND map in (%s)",
 #else
             auto results = WorldDatabase.PQuery("SELECT `map`, `position_x`, `position_y`, `position_z` "

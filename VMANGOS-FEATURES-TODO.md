@@ -285,3 +285,85 @@ forever; XP froze bot-by-bot over hours). Final placement:
   fatal cmangos-dialect SQL (character_pet.owner) — fixed; map-thread
   AI DB queries are safe when the SQL is valid (vmangos core also
   queries synchronously from map context).
+
+## Session 8 (2026-07-19): behavior audit + full stub remediation
+
+### Phase A behavior-audit findings (evidence-based)
+
+- **Slow-progression explanations that are NOT bugs**: conf caps
+  `MinRandomBots=8/MaxRandomBots=10` (only ~9/18 online, offline XP frozen)
+  + `RandomBotTimedLogout` rotation; XP rates blizzlike 1x; activity
+  throttling already disabled in test conf. Travel-node graph healthy
+  (1839 nodes / 6200 paths / 414k points loaded from prebuilt SQL).
+- **Quest loop WORKS**: character_queststatus showed 20 COMPLETE + 11
+  INCOMPLETE across the fresh L1-4 population.
+- **character_spell ~0 rows is NOT a bug**: vmangos re-derives default
+  class spells at login and only persists extras (a real level-1 player
+  char also has 0 rows). Spell learning for natural bots is via physical
+  trainer visits (AutoTrainSpells=yes).
+- **Hunter "auto shot/serpent sting - IMPOSSIBLE"**: ammo/weapon/quiver
+  all present (200 arrows, ammo_id set) - IMPOSSIBLE was min-range /
+  not-yet-learned (serpent sting is trained at L4), not an ammo bug.
+- **REAL DEFECT (evade stalemate)**: 45s+ single-mob combat with target
+  HP snapping back to 100% repeatedly (evade-reset loop) while the bot
+  idles at range ("auto shot - USELESS|no actions executed").
+  Root-cause candidate fixed this session: compat InterruptMoving wiped
+  the whole movement generator (MoveIdle) instead of just stopping the
+  spline, thrashing chase state mid-approach (see B1 below). Verify via
+  boot43 A/B kill-rate diff (Loot.log).
+- **Anticheat**: zero violations in Anticheat.log across 40+ bot boots -
+  packet-driven movement anticheat never sees socketless bots.
+
+### Implemented (stub -> real, cmangos-classic answer key at
+### E:\Development\vmangos\cmangos-classic)
+
+- `Unit::InterruptMoving(forceSendStop)` - real cmangos semantics:
+  interrupt spline + StopMoving, generator stack untouched (was MoveIdle).
+- `Unit::CanAttackOnSight` - evade/feign-death gating + IsHostileTo
+  (neutral-but-attackable mobs no longer treated as on-sight aggressors;
+  fixes avoid-mobs inflation + neutral-target attacks).
+- `Unit::IsFacingTargetsBack` - added the "we face them" conjunction.
+- `Unit::GetSpeedInMotion` - live spline sampling (ComputePositionAfterTime).
+- `Unit::GetAttackDistance` - generic cmangos 20yd-base fallback for
+  non-Creature receivers (was 0).
+- `Unit::IsInTeam` - player-controlled + controlling-player team compare.
+- `Unit::IsInSwimmableWater` - native CanSwimAtPosition.
+- `Player::TakeQuestSourceItem` - real source-item destroy on abandon.
+- `Player::Get/SetDividerGuid` - mapped to vmangos m_questShareInfo.
+- `Player::isHonorOrXPTarget/isRessurectRequested` - mapped to native
+  IsHonorOrXPTarget/IsRessurectRequested.
+- `Player::RewardQuest(Object*)` - item quest-givers no longer produce a
+  null quest ender (native RewardQuest derefs it unconditionally - was a
+  latent crash); falls back to the player itself.
+- Grind-teleport SQL - vmangos-dialect guard/civilian/no-XP/immune
+  exclusions (flags_extra 0x400, civilian col, static_flags1 0x2/0x20/0x40).
+  NOTE: ai_playerbot_tele_cache must be truncated once to re-seed.
+- `Map::HasRealPlayers/HasActiveZone(s)` - real socket-session +
+  zone-granular scans (Map.cpp).
+- `World::GetAverageDiff/GetMaxDiff` - EMA(50 ticks) + 60s-window max.
+- `Creature::SetCorpseAccelerationDelay/ReduceCorpseDecayTimer` - real
+  corpse-decay caps (grind-camp respawn acceleration); boss branch in
+  PlayerbotAI.cpp gated on IsDungeon + rank>=elite instead of IsEncounter.
+- `GameObject::IsInUse` - lootState==GO_ACTIVATED; `GetLinkedTrap` - real
+  (linked-trap guid recorded in SummonLinkedTrapIfAny).
+- `MotionMaster::MovePath` - real multi-point spline via MovebyPath
+  (was final-point collapse).
+- `TerrainInfo::CanCheckLiquidLevel` - real GetGrid presence check.
+- Threading hardening: "last said" AI value pre-created in PlayerbotAI
+  ctor (SMSG_MESSAGECHAT handles cross-thread; QueueChatResponse and the
+  packet queues are already mutex-guarded upstream - audit complete, no
+  other synchronous opcode touches cross-thread unit state:
+  SPELL_FAILURE/DELAYED/KNOCK_BACK are same-map-thread by construction).
+
+### Verified upstream-identical / WONTFIX (cmangos-classic checked)
+
+- `CreatureAI::IsRangedUnit()=false`, `IsPreventingDeath()=false`,
+  `Pet::CastOwnerTalentAuras()` empty, `Creature::GetInteractionPauseTimer`
+  absent upstream, `GetCollisionWidth` API absent upstream (bounding-radius
+  approximation stands), `ITEM_SPELLTRIGGER_ON_NO_DELAY_USE` never occurs
+  in vanilla item data (0 rows), `Creature/Item::m_loot` always-non-null is
+  sound (vmangos generates corpse loot eagerly at kill),
+  `WorldSession::SetNoAnticheat/SetOffline` no-ops safe (see Phase A),
+  `WorldPosition::isVmapLoaded` true (only offline-generator callers),
+  `Player::GetMountInfo` nullptr (debug output only), quest-share
+  SetDividerGuid(non-empty) unused by module (clear-only implemented).

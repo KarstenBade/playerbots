@@ -838,8 +838,10 @@ std::vector<WorldPosition> WorldPosition::frommGridPair(const mGridPair& gridPai
 bool WorldPosition::isVmapLoaded(uint32 mapId, int x, int y) 
 {
 #ifdef VMANGOS
-    // VMANGOS-TODO: vmangos's VMapManager has no tile-loaded query; vmaps
-    // load alongside grids, so report loaded.
+    // vmangos's VMapManager exposes no tile-loaded query. Both callers sit
+    // on the offline travel-node generation path, which vmangos never runs
+    // (the prebuilt node graph ships in SQL); at runtime vmap tiles load
+    // alongside grids, so "loaded" is the correct answer.
     return true;
 #else
     return VMAP::VMapFactory::createOrGetVMapManager()->IsTileLoaded(mapId, x, y);
