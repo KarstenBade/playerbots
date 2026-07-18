@@ -224,3 +224,21 @@ RandomPlayerbotMgr.cpp corrected.
   ground effects, so HazardsValue can see them.
 
 Remaining HIGH: none. (Leveling fixed in session 6.)
+
+## Session 7b: MEDIUM items
+
+- Taxi-follow REAL: core `PlayerTaxi::GetFinalTaxiDestination` +
+  `sObjectMgr.GetTaxiNodeEntry` (MovementActions follow-to-flight-end,
+  GoAction "On a flight path to <area>").
+- Zone-granular teleport activity REAL: scan of the target map's player
+  list for a real (non-bot) player in the candidate zone
+  (RandomPlayerbotMgr.cpp, replaces the map-level approximation).
+- Reagent-free-cast check (`if (true)` PlayerbotAI.cpp ~5706): NOT a
+  defect — cmangos's CanNoReagentCast models a TBC+ mechanic
+  (no-reagent-while-preparing); vanilla always consumes reagents, so the
+  forced branch is vanilla-correct. Removed from the backlog.
+- `WorldPosition::getPathFromPath` unit-less arm stays stubbed: only the
+  offline travel-graph generator and cross-map planning hit it (runtime
+  callers always pass the bot); making it real needs a Unit-free core
+  PathInfo variant - not worth it while random bots teleport long
+  distance anyway.

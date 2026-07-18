@@ -2508,12 +2508,23 @@ void RandomPlayerbotMgr::RandomTeleport(Player* bot, std::vector<WorldLocation> 
             uint32 mapId = l.getMapId();
             Map* tMap = sMapMgr.FindMap(mapId, 0);
 #ifdef VMANGOS
-            // VMANGOS-TODO: vmangos doesn't track per-zone activity; approximate
-            // with "any players on the map" (zone granularity lost).
+            // Zone-granular activity: a zone is active if a real (non-bot)
+            // player is currently in it (vmangos has no HasActiveZone cache,
+            // so scan the map's player list).
             if (tMap && tMap->IsContinent() && tMap->GetPlayers().getSize() > 0)
             {
                 uint32 zoneId = sTerrainMgr.GetZoneId(mapId, l.coord_x, l.coord_y, l.coord_z);
-                if (zoneId)
+                bool zoneActive = false;
+                for (const auto& pref : tMap->GetPlayers())
+                {
+                    Player* mapPlayer = pref.getSource();
+                    if (mapPlayer && !mapPlayer->GetPlayerbotAI() && mapPlayer->GetZoneId() == zoneId)
+                    {
+                        zoneActive = true;
+                        break;
+                    }
+                }
+                if (zoneActive)
                 {
 #else
             if (tMap && tMap->IsContinent() && tMap->HasActiveZones())
