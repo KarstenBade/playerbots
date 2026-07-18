@@ -267,3 +267,21 @@ for cmangos's single-threaded map model. Consequences:
   most SMSG). Most opcodes are queued and drained in UpdateAIInternal,
   but the synchronous cases could still race; audit if heisen-crashes
   reappear in packet-mirror paths.
+
+## Session 7d: threading rule REFINED (supersedes 7c's placement)
+
+World-thread bot ticking (7c) broke COMBAT: unit-local operations (spell
+casts + their SpellEvents, motion) belong to the thread that updates the
+unit — the bot's MAP worker. Ticking from the world thread raced the map
+workers and each bot eventually wedged with a permanently "in progress"
+cast (full-HP starter mobs, every cast FAILED, bot stuck in combat
+forever; XP froze bot-by-bot over hours). Final placement:
+- Bot PlayerbotAI::UpdateAI + master PlayerbotMgr::UpdateAI: from
+  Player::Update via PlayerbotsBridge::OnPlayerUpdate (map thread —
+  upstream cmangos model; correct unit locality).
+- RandomPlayerbotMgr::UpdateAIInternal (logins/teleports/randomize) +
+  command-server queue: world thread via bridge UpdateAI.
+- The 7c freeze was NOT caused by map-thread ticking itself but by the
+  fatal cmangos-dialect SQL (character_pet.owner) — fixed; map-thread
+  AI DB queries are safe when the SQL is valid (vmangos core also
+  queries synchronously from map context).
