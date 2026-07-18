@@ -566,8 +566,16 @@ public:
     Player* GetMaster() { return master; }
 
     //Checks if the bot is really a player. Players always have themselves as master.
+#ifdef VMANGOS
+    // vmangos socketless sessions report "<BOT>" (WorldSession.cpp), not
+    // cmangos's "disconnected/bot". Without this every bot self-identified
+    // as a real player (broke IsRandomBot/randomize/leveling).
+    bool IsRealPlayer() { return bot->GetSession()->GetRemoteAddress() != "<BOT>"; }
+    bool IsRealPlayer(Unit* unit) { return unit->IsPlayer() && ((Player*)unit)->GetSession()->GetRemoteAddress() != "<BOT>"; }
+#else
     bool IsRealPlayer() { return bot->GetSession()->GetRemoteAddress() != "disconnected/bot"; }
     bool IsRealPlayer(Unit* unit) { return unit->IsPlayer() && ((Player*)unit)->GetSession()->GetRemoteAddress() != "disconnected/bot"; }
+#endif
     bool IsSelfMaster() { return master ? (master == bot) : false; }
     //Bot has a master that is a player.
     bool HasRealPlayerMaster() { return master && (!master->GetPlayerbotAI() || master->GetPlayerbotAI()->IsRealPlayer()); } 
