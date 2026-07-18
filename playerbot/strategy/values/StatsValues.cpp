@@ -34,7 +34,13 @@ bool PetIsDeadValue::Calculate()
     if (!bot->GetPet())
     {
         uint32 ownerid = bot->GetGUIDLow();
+#ifdef VMANGOS
+        // vmangos column is owner_guid (a bad column name is a FATAL error in
+        // vmangos: HandleMySQLError throws -> abort).
+        auto result = CharacterDatabase.PQuery("SELECT id FROM character_pet WHERE owner_guid = '%u'", ownerid);
+#else
         auto result = CharacterDatabase.PQuery("SELECT id FROM character_pet WHERE owner = '%u'", ownerid);
+#endif
         if (!result)
             return false;
 

@@ -124,9 +124,15 @@ bool InitializePetAction::isUseful()
             bool hasTamedPet = bot->GetPet();
             if (!hasTamedPet)
             {
+#ifdef VMANGOS
+                std::unique_ptr<QueryResult> queryResult = CharacterDatabase.PQuery("SELECT id, entry, owner_guid "
+                                                                                    "FROM character_pet WHERE owner_guid = '%u' AND (slot = '%u' OR slot > '%u') ",
+                                                                                    bot->GetGUIDLow(), PET_SAVE_AS_CURRENT, PET_SAVE_LAST_STABLE_SLOT);
+#else
                 std::unique_ptr<QueryResult> queryResult = CharacterDatabase.PQuery("SELECT id, entry, owner "
                                                                                     "FROM character_pet WHERE owner = '%u' AND (slot = '%u' OR slot > '%u') ",
                                                                                     bot->GetGUIDLow(), PET_SAVE_AS_CURRENT, PET_SAVE_LAST_STABLE_SLOT);
+#endif
             
                 if (queryResult)
                 {

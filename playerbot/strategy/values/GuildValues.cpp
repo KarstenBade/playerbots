@@ -1282,7 +1282,11 @@ uint8 PetitionSignsValue::Calculate()
     if (petitions.empty())
         return 0;
 
+#ifdef VMANGOS
+    auto result = CharacterDatabase.PQuery("SELECT player_guid FROM petition_sign WHERE petition_guid = '%u'", petitions.front()->GetObjectGuid().GetCounter());
+#else
     auto result = CharacterDatabase.PQuery("SELECT playerguid FROM petition_sign WHERE petitionguid = '%u'", petitions.front()->GetObjectGuid().GetCounter());
+#endif
 
     return result ? (uint8)result->GetRowCount() : 0;
 };
