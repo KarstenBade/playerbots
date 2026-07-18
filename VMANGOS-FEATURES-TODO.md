@@ -206,3 +206,21 @@ RandomPlayerbotMgr.cpp corrected.
 - DND/AFK auto-reply, emote sounds, LFG meeting stones, instance-count
   gating, WorldSafeLocs orientation, skill race/class gating, misc
   Player.h safe defaults (isHonorOrXPTarget→true etc.).
+
+## Session 7 (2026-07-18): HIGH-ledger items made real
+
+- `Player::learnClassLevelSpells` REAL: `ChatHandler(this).HandleLearnAllTrainerCommand("")`,
+  the same mechanism vmangos's native combat bots use (level-gated via
+  GetTrainerSpellState). Core: out-of-line def in Player.cpp,
+  `friend class Player` in Chat.h under ENABLE_PLAYERBOTS.
+- Chase introspection REAL: ENABLE_PLAYERBOTS virtuals
+  `GetAngle`/`GetOffset` on MovementGenerator base, overridden in
+  TargetedMovementGeneratorMedium (m_fAngle/m_fOffset); ServerFacade
+  GetChaseTarget/Angle/Offset return live values while a chase/follow
+  generator is current (bots no longer re-issue chase every tick).
+- Ground-AoE detection REAL: module-side `VmangosDynObjInRangeSearcher`
+  visiting the grid's DynamicObjectMapType via `Cell::VisitGridObjects`
+  (NearestGameObjects.cpp) — `NearestDynamicObjects` now returns hostile
+  ground effects, so HazardsValue can see them.
+
+Remaining HIGH: none. (Leveling fixed in session 6.)

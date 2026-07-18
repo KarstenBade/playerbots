@@ -6,6 +6,9 @@
 #include "Grids/GridNotifiers.h"
 #include "Grids/GridNotifiersImpl.h"
 #include "Grids/CellImpl.h"
+#ifdef VMANGOS
+#include <DynamicObject.h>
+#endif
 
 using namespace ai;
 using namespace MaNGOS;
@@ -89,6 +92,34 @@ std::list<ObjectGuid> NearestGameObjects::Calculate()
     return result;
 }
 
+#ifdef VMANGOS
+// vmangos grids store DynamicObjects (AllGridObjectTypes) but ship no stock
+// DynamicObjectListSearcher - visit the container directly. File scope:
+// local classes cannot have template members (C2892).
+namespace
+{
+    struct VmangosDynObjInRangeSearcher
+    {
+        std::list<DynamicObject*>& i_objects;
+        WorldObject const* i_center;
+        float i_range;
+
+        VmangosDynObjInRangeSearcher(std::list<DynamicObject*>& objects, WorldObject const* center, float r)
+            : i_objects(objects), i_center(center), i_range(r) {}
+
+        void Visit(DynamicObjectMapType& m)
+        {
+            for (DynamicObjectMapType::iterator itr = m.begin(); itr != m.end(); ++itr)
+                if (DynamicObject* dynObj = itr->getSource())
+                    if (i_center->IsWithinDistInMap(dynObj, i_range))
+                        i_objects.push_back(dynObj);
+        }
+
+        template<class NOT_INTERESTED> void Visit(GridRefManager<NOT_INTERESTED>&) {}
+    };
+}
+#endif
+
 std::list<ObjectGuid> NearestDynamicObjects::Calculate()
 {
     std::list<DynamicObject*> targets;
@@ -100,8 +131,8 @@ std::list<ObjectGuid> NearestDynamicObjects::Calculate()
     Cell::VisitAllObjects((const WorldObject*)bot, searcher, range);
 #endif
 #ifdef VMANGOS
-    // VMANGOS-TODO: vmangos GridNotifiers have no dynamic-object searcher;
-    // hostile ground effects are not detected here.
+    VmangosDynObjInRangeSearcher searcher(targets, bot, range);
+    Cell::VisitGridObjects((WorldObject const*)bot, searcher, range);
 #endif
 
     std::list<ObjectGuid> result;

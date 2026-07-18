@@ -177,12 +177,35 @@ FactionTemplateEntry const* ServerFacade::GetFactionTemplateEntry(Unit *unit)
 }
 
 #ifdef VMANGOS
-// VMANGOS-TODO: vmangos ChaseMovementGenerator is a template
-// (ChaseMovementGenerator<T>) and doesn't expose GetCurrentTarget/GetAngle/
-// GetOffset the way cmangos does. Chase introspection returns defaults for now.
-Unit* ServerFacade::GetChaseTarget(Unit* /*target*/) { return nullptr; }
-float ServerFacade::GetChaseAngle(Unit* /*target*/) { return 0.0f; }
-float ServerFacade::GetChaseOffset(Unit* /*target*/) { return 0.0f; }
+// Real introspection via ENABLE_PLAYERBOTS virtuals on the core
+// MovementGenerator base (GetCurrentTarget/GetAngle/GetOffset, overridden by
+// TargetedMovementGeneratorMedium). Only meaningful while a chase/follow
+// generator is current.
+static MovementGenerator const* VmangosCurrentTargetedGen(Unit* target)
+{
+    MovementGenerator const* gen = target->GetMotionMaster()->GetCurrent();
+    if (gen && (gen->GetMovementGeneratorType() == CHASE_MOTION_TYPE || gen->GetMovementGeneratorType() == FOLLOW_MOTION_TYPE))
+        return gen;
+    return nullptr;
+}
+
+Unit* ServerFacade::GetChaseTarget(Unit* target)
+{
+    MovementGenerator const* gen = VmangosCurrentTargetedGen(target);
+    return gen ? gen->GetCurrentTarget() : nullptr;
+}
+
+float ServerFacade::GetChaseAngle(Unit* target)
+{
+    MovementGenerator const* gen = VmangosCurrentTargetedGen(target);
+    return gen ? gen->GetAngle() : 0.0f;
+}
+
+float ServerFacade::GetChaseOffset(Unit* target)
+{
+    MovementGenerator const* gen = VmangosCurrentTargetedGen(target);
+    return gen ? gen->GetOffset() : 0.0f;
+}
 #else
 Unit* ServerFacade::GetChaseTarget(Unit* target)
 {
