@@ -17,6 +17,11 @@ public:
     }
 
     void Start();
+#ifdef VMANGOS
+    // Drain remote-command requests on the world thread (thread safety;
+    // called from RandomPlayerbotMgr::UpdateAIInternal).
+    void ProcessQueuedCommands();
+#endif
 };
 
 #define sPlayerbotCommandServer PlayerbotCommandServer::instance()

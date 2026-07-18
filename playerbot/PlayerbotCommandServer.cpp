@@ -13,12 +13,59 @@ INSTANTIATE_SINGLETON_1(PlayerbotCommandServer);
 #include <boost/asio.hpp>
 #ifdef VMANGOS
 #include <thread> // boost::thread would autolink a boost library vmangos doesn't ship
+#include <mutex>
+#include <future>
+#include <deque>
+#include <chrono>
 #else
 #include <boost/thread/thread.hpp>
 #endif
 
 using boost::asio::ip::tcp;
 typedef boost::shared_ptr<tcp::socket> socket_ptr;
+
+#ifdef VMANGOS
+// HandleRemoteCommand touches bot/world state and must not run on the
+// per-connection threads (racing the world/map update froze map updates).
+// Connection threads enqueue requests here; the world thread answers them
+// via ProcessQueuedCommands() (called from RandomPlayerbotMgr::UpdateAIInternal).
+namespace
+{
+    struct PendingRemoteCommand
+    {
+        std::string request;
+        std::promise<std::string> reply;
+    };
+
+    std::mutex s_remoteCmdMutex;
+    std::deque<std::shared_ptr<PendingRemoteCommand>> s_remoteCmdQueue;
+
+    std::string QueueRemoteCommand(std::string const& request, uint32 timeoutMs)
+    {
+        auto cmd = std::make_shared<PendingRemoteCommand>();
+        cmd->request = request;
+        std::future<std::string> fut = cmd->reply.get_future();
+        {
+            std::lock_guard<std::mutex> lock(s_remoteCmdMutex);
+            s_remoteCmdQueue.push_back(cmd);
+        }
+        if (fut.wait_for(std::chrono::milliseconds(timeoutMs)) == std::future_status::ready)
+            return fut.get();
+        return "timeout";
+    }
+}
+
+void PlayerbotCommandServer::ProcessQueuedCommands()
+{
+    std::deque<std::shared_ptr<PendingRemoteCommand>> batch;
+    {
+        std::lock_guard<std::mutex> lock(s_remoteCmdMutex);
+        batch.swap(s_remoteCmdQueue);
+    }
+    for (auto& cmd : batch)
+        cmd->reply.set_value(sRandomPlayerbotMgr.HandleRemoteCommand(cmd->request));
+}
+#endif
 
 bool ReadLine(socket_ptr sock, std::string* buffer, std::string* line)
 {
@@ -49,7 +96,12 @@ void session(socket_ptr sock)
     {
         std::string buffer, request;
         while (ReadLine(sock, &buffer, &request)) {
+#ifdef VMANGOS
+            // Answered on the world thread (see QueueRemoteCommand above).
+            std::string response = QueueRemoteCommand(request, 2500) + "\n";
+#else
             std::string response = sRandomPlayerbotMgr.HandleRemoteCommand(request) + "\n";
+#endif
             boost::asio::write(*sock, boost::asio::buffer(response.c_str(), response.size()));
             request = "";
         }

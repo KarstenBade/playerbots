@@ -673,6 +673,11 @@ void RandomPlayerbotMgr::UpdateAIInternal(uint32 elapsed, bool minimal)
     if (!sPlayerbotAIConfig.randomBotAutologin || !sPlayerbotAIConfig.enabled)
         return;
 
+#ifdef VMANGOS
+    // Answer queued command-server requests on this (world) thread.
+    sPlayerbotCommandServer.ProcessQueuedCommands();
+#endif
+
 #ifdef GenerateBotTests
     if (sPlayerbotAIConfig.startupRunTestsPending)
     {
