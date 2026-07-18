@@ -3041,6 +3041,23 @@ namespace PlayerbotsBridge
 
     void UpdateAI(uint32 diff)
     {
+        // Tick every bot's behavior AI and every master's bot manager HERE,
+        // on the world thread after map updates have joined. Ticking from
+        // Player::Update ran the AI on parallel continent worker threads;
+        // concurrent synchronous DB queries (e.g. PetIsDeadValue) corrupted
+        // a MySQL connection -> throw -> abort -> hidden CRT assert dialog
+        // that froze the map barrier (diagnosed via all-thread stack dump).
+        std::vector<Player*> bots;
+        sRandomPlayerbotMgr.ForEachPlayerbot([&bots](Player* bot) { bots.push_back(bot); });
+        for (Player* bot : bots)
+            if (bot && bot->GetPlayerbotAI())
+                bot->GetPlayerbotAI()->UpdateAI(diff);
+
+        for (auto& itr : sRandomPlayerbotMgr.GetPlayers())
+            if (Player* master = itr.second)
+                if (master->GetPlayerbotMgr())
+                    master->GetPlayerbotMgr()->UpdateAI(diff);
+
         sRandomPlayerbotMgr.UpdateAI(diff);
     }
 
@@ -3074,14 +3091,6 @@ namespace PlayerbotsBridge
     {
         if (player->GetPlayerbotMgr())
             player->GetPlayerbotMgr()->UpdateSessions(0);
-    }
-
-    void OnPlayerUpdate(Player* player, uint32 diff)
-    {
-        if (player->GetPlayerbotAI())
-            player->GetPlayerbotAI()->UpdateAI(diff);
-        if (player->GetPlayerbotMgr())
-            player->GetPlayerbotMgr()->UpdateAI(diff);
     }
 
     bool OnChatMessage(uint32 type, uint32 lang, std::string const& msg, Player* sender, Player* whisperTarget)

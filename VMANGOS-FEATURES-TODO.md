@@ -242,3 +242,28 @@ Remaining HIGH: none. (Leveling fixed in session 6.)
   callers always pass the bot); making it real needs a Unit-free core
   PathInfo variant - not worth it while random bots teleport long
   distance anyway.
+
+## Session 7c: THE THREADING RULE (hard-won)
+
+vmangos updates continents on PARALLEL worker threads (MapManager spawns
+one thread per continent + instance pools). The ike3 module is written
+for cmangos's single-threaded map model. Consequences:
+
+- Bot behavior AI (PlayerbotAI::UpdateAI) MUST run on the world thread.
+  It is ticked from PlayerbotsBridge::UpdateAI (World::Update, after map
+  updates join) — NEVER from Player::Update (map worker). Ticking from
+  map workers made concurrent synchronous DB queries (PetIsDeadValue et
+  al.) corrupt a shared MySQL connection -> HandleMySQLError throw ->
+  terminate -> hidden Debug-CRT assert MessageBox -> continent barrier
+  froze the whole server (world thread stuck in MapManager::Update).
+  Diagnosed with skills/vmangos-server-setup/stackdump.cpp (all-thread
+  live stack dumper; works alongside minidebug).
+- Command-server requests are marshalled to the world thread
+  (PlayerbotCommandServer ProcessQueuedCommands drained in
+  RandomPlayerbotMgr::UpdateAIInternal) — never answer them on the
+  per-connection threads.
+- RESIDUAL RISK (open): HandleBotOutgoingPacket handles some opcodes
+  synchronously on whatever thread sends the packet (map workers send
+  most SMSG). Most opcodes are queued and drained in UpdateAIInternal,
+  but the synchronous cases could still race; audit if heisen-crashes
+  reappear in packet-mirror paths.
