@@ -245,6 +245,9 @@ class ServerFacade
         Unit* GetChaseTarget(Unit* target);
         float GetChaseAngle(Unit* target);
         float GetChaseOffset(Unit* target);
+        // True unless the chase/follow generator's last pathfind failed to
+        // reach the target. True when no chase/follow generator is current.
+        bool IsChaseTargetReachable(Unit* target);
 
         BattleGroundTypeId BgTemplateId(BattleGroundQueueTypeId queueTypeId)
         {

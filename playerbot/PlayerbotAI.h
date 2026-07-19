@@ -365,8 +365,17 @@ public:
     void HandleCommands();
 private:
     void UpdateAIInternal(uint32 elapsed, bool minimal = false) override;
-public:    
+public:
     static std::string BotStateToString(BotState state);
+#ifdef VMANGOS
+    // Combat-reach recovery: when the core chase pathfind marks a target
+    // unreachable, the bot would otherwise stand next to nothing for the full
+    // 5-minute CombatStuckTrigger window. Mark such targets and skip them in
+    // target selection for a short cooldown so the bot moves on immediately.
+    // Per-bot state (bots tick on parallel map threads; no shared statics).
+    void MarkTargetUnreachable(ObjectGuid guid);
+    bool IsTargetTemporarilyUnreachable(ObjectGuid guid) const;
+#endif
     std::string GetDefaultMovementStrategy();
     void EnsureDefaultMovementStrategy(Player* requester = nullptr);
 	std::string HandleRemoteCommand(std::string command);
@@ -708,6 +717,9 @@ protected:
     CompositeChatFilter chatFilter;
     PlayerbotSecurity security;
     std::map<std::string, time_t> whispers;
+#ifdef VMANGOS
+    std::map<ObjectGuid, uint32> m_unreachableTargets; // guid -> expiry (getMSTime)
+#endif
     std::pair<ChatMsg, time_t> currentChat;
     static std::set<std::string> unsecuredCommands;
     bool allowActive[MAX_ACTIVITY_TYPE];

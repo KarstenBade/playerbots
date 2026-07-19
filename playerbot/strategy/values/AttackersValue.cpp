@@ -406,7 +406,28 @@ bool AttackersValue::IsValid(Unit* target, Player* player, Player* owner, bool c
             {
                 return false;
             }
-        }        
+        }
+
+#ifdef VMANGOS
+        // Combat-reach recovery: a target the core's chase pathfind cannot
+        // reach (evaded/leashed to an unreachable spawn, or across a navmesh
+        // seam) would otherwise stall the bot next to nothing for the full
+        // 5-minute CombatStuckTrigger window. Detect via the core-authoritative
+        // reachable flag on the bot's own chase generator and skip it for a
+        // short cooldown so the bot immediately picks another target.
+        if (PlayerbotAI* ownerAi = playerToCheckAgainst->GetPlayerbotAI())
+        {
+            if (ownerAi->IsTargetTemporarilyUnreachable(target->GetObjectGuid()))
+                return false;
+
+            if (sServerFacade.GetChaseTarget(playerToCheckAgainst) == target &&
+                !sServerFacade.IsChaseTargetReachable(playerToCheckAgainst))
+            {
+                ownerAi->MarkTargetUnreachable(target->GetObjectGuid());
+                return false;
+            }
+        }
+#endif
     }
 
     if (IgnoreTarget(target, playerToCheckAgainst))

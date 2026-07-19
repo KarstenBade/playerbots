@@ -206,6 +206,12 @@ float ServerFacade::GetChaseOffset(Unit* target)
     MovementGenerator const* gen = VmangosCurrentTargetedGen(target);
     return gen ? gen->GetOffset() : 0.0f;
 }
+
+bool ServerFacade::IsChaseTargetReachable(Unit* target)
+{
+    MovementGenerator const* gen = VmangosCurrentTargetedGen(target);
+    return gen ? gen->GetReachable() : true;
+}
 #else
 Unit* ServerFacade::GetChaseTarget(Unit* target)
 {
@@ -220,6 +226,11 @@ float ServerFacade::GetChaseAngle(Unit* target)
 float ServerFacade::GetChaseOffset(Unit* target)
 {
     return static_cast<ChaseMovementGenerator const*>(target->GetMotionMaster()->GetCurrent())->GetOffset();
+}
+
+bool ServerFacade::IsChaseTargetReachable(Unit* target)
+{
+    return static_cast<ChaseMovementGenerator const*>(target->GetMotionMaster()->GetCurrent())->IsReachable();
 }
 #endif
 

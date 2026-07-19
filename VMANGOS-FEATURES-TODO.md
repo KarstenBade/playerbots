@@ -367,3 +367,58 @@ forever; XP froze bot-by-bot over hours). Final placement:
   `WorldPosition::isVmapLoaded` true (only offline-generator callers),
   `Player::GetMountInfo` nullptr (debug output only), quest-share
   SetDividerGuid(non-empty) unused by module (clear-only implemented).
+
+## Session 8b (2026-07-19): combat-wedge root cause + reachability-drop fix
+
+### The wedge (pre-existing, NOT a session-8 regression — boot42 baseline had it)
+
+Behavior audit found ~6 of the online bots frozen in combat at any time
+(91-98% time-in-combat, 0 XP, standing still), rotating through the
+population and roughly HALVING effective grind throughput. Half the bots
+level normally; the frozen ones self-recover but slowly.
+
+Diagnosed with a purpose-built `diag` command server verb (dumps movement
+flags, unit states, pending ACK-gated changes, motion generator, spline
+internals, melee state, attack timers, CanAutoAttackTarget, reach) + an
+automated wedge-detector (scratchpad wedge_detector.py). Decisive signature
+across every wedged bot:
+- `canAutoAttack: 1` (ATTACK_RESULT_NOT_IN_RANGE), `reach: 0`,
+  **`dist: 17-56 yards`** from the target.
+- `mm: 6` (CHASE_MOTION_TYPE) — the bot is on the CORE chase generator,
+  which the module's ChaseTo only falls back to when its own point-path
+  generation (getPathTo / GeneratePathAvoidingHazards) already failed.
+- Only a duration-1ms facing spline; `moving: 0`.
+
+Root cause: the bot commits to a target it cannot path to — the mob has
+evaded/leashed back toward its spawn (17-56 yd away), or sits across a
+navmesh seam (the wedge-location tiles themselves exist, so it is the
+mob's post-leash spot, not a whole-tile hole). BOTH the module path and
+the core chase fallback fail, so the bot stands 17-56 yd away re-facing
+the target until ike3's `CombatStuckTrigger` fires and `unstuck`
+teleports it — but that threshold is **5 minutes**. Five minutes of zero
+XP per wedge event, per bot, repeatedly.
+
+### Fix (core-authoritative reachability -> fast target drop)
+
+The core `ChaseMovementGenerator` already computes `m_bReachable`
+(false only after a full A* pathfind returns NOPATH/INCOMPLETE), but the
+module never queried it. Wired it through:
+- core `MovementGenerator::GetReachable()` virtual (ENABLE_PLAYERBOTS),
+  overridden in TargetedMovementGeneratorMedium to return m_bReachable
+  (mirrors the session-7 GetCurrentTarget/GetAngle/GetOffset pattern).
+- module `ServerFacade::IsChaseTargetReachable(bot)`.
+- `PlayerbotAI::MarkTargetUnreachable / IsTargetTemporarilyUnreachable`
+  — per-bot ignore map (guid -> 20s expiry; per-bot because bots tick on
+  parallel map threads, no shared statics).
+- `AttackersValue::IsValid` NPC branch (next to the evade check): if the
+  target is the bot's current chase target and the core reports it
+  unreachable, mark it and return invalid; also skip any guid still on
+  the ignore list. The bot drops the target within a tick or two and
+  picks another (or travels on), instead of stalling 5 minutes.
+
+Not masking: dropping a target the core authoritatively cannot path to is
+correct behavior; the 20s cooldown lets the mob leash/reset before retry.
+Validate via wedge_detector.py on the next boot: frozen-bot count should
+collapse and fleet XP/hour rise vs the boot42 baseline (16,391 xp/h with
+6 wedged) / boot47 (6,599 xp/h). Rig `diag` command + BotChase logging are
+diagnostic-only (uncommitted) — strip or keep behind the verb as desired.

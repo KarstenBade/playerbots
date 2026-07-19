@@ -6668,6 +6668,58 @@ std::string PlayerbotAI::HandleRemoteCommand(std::string command)
 
         return out.str();
     }
+#ifdef VMANGOS
+    else if (command == "diag")
+    {
+        // Wedge diagnosis: dump every state that can block bot movement/combat.
+        std::ostringstream out;
+        out << "telep near/far: " << bot->IsBeingTeleportedNear() << "/" << bot->IsBeingTeleportedFar();
+        out << " | moveflags: 0x" << std::hex << bot->m_movementInfo.GetMovementFlags() << std::dec;
+        out << " | unitstate rooted/stunned/confused/fleeing/feign: "
+            << bot->HasUnitState(UNIT_STATE_ROOT) << bot->HasUnitState(UNIT_STATE_STUNNED)
+            << bot->HasUnitState(UNIT_STATE_CONFUSED) << bot->HasUnitState(UNIT_STATE_FLEEING)
+            << bot->HasUnitState(UNIT_STATE_FEIGN_DEATH);
+        out << " | auras root/stun/fear/conf: " << bot->HasAuraType(SPELL_AURA_MOD_ROOT)
+            << bot->HasAuraType(SPELL_AURA_MOD_STUN) << bot->HasAuraType(SPELL_AURA_MOD_FEAR)
+            << bot->HasAuraType(SPELL_AURA_MOD_CONFUSE);
+        out << " | pending tele/root/speedrun: " << bot->HasPendingMovementChange(TELEPORT)
+            << bot->HasPendingMovementChange(ROOT) << bot->HasPendingMovementChange(SPEED_CHANGE_RUN);
+        out << " | movecounter: " << bot->GetMovementCounter();
+        out << " | spells gen/chan/rep: ";
+        for (int t = CURRENT_GENERIC_SPELL; t <= CURRENT_AUTOREPEAT_SPELL; ++t)
+        {
+            if (Spell* s = bot->GetCurrentSpell(CurrentSpellTypes(t)))
+                out << s->m_spellInfo->Id << ":" << s->getState() << " ";
+            else
+                out << "- ";
+        }
+        out << "| mm: " << bot->GetMotionMaster()->GetCurrentMovementGeneratorType();
+        out << " | victim: " << (bot->GetVictim() ? bot->GetVictim()->GetName() : "-");
+        Unit* chaseTarget = sServerFacade.GetChaseTarget(bot);
+        out << " | chase tgt/offset: " << (chaseTarget ? chaseTarget->GetName() : "-")
+            << "/" << sServerFacade.GetChaseOffset(bot);
+        out << " | needsAsync: " << bot->GetMotionMaster()->NeedsAsyncUpdate();
+        out << " | aitgt: ";
+        Unit* aiTarget = *GetAiObjectContext()->GetValue<Unit*>("current target");
+        out << (aiTarget ? aiTarget->GetName() : "-");
+        out << " | moving: " << bot->isMovingOrTurning();
+        out << " | meleeState: " << bot->HasUnitState(UNIT_STATE_MELEE_ATTACKING);
+        out << " | atkTimer base/ranged: " << bot->GetAttackTimer(BASE_ATTACK) << "/" << bot->GetAttackTimer(RANGED_ATTACK);
+        if (Unit* victim = bot->GetVictim())
+            out << " | canAutoAttack: " << uint32(bot->CanAutoAttackTarget(victim))
+                << " reach: " << bot->CanReachWithMeleeAutoAttack(victim)
+                << " dist: " << bot->GetDistance(victim);
+        out << " | spline: " << bot->GetSplineDebugInfo();
+        LastMovement& lastMove = *GetAiObjectContext()->GetValue<LastMovement&>("last movement");
+        out << " | lastMoveShort dist: " << (lastMove.lastMoveShort.isValid() ? lastMove.lastMoveShort.distance(WorldPosition(bot)) : -1.0f)
+            << " lastPathEmpty: " << lastMove.lastPath.empty();
+        out << " | speed run/cur: " << bot->GetSpeed(MOVE_RUN) << "/" << bot->GetSpeedInMotion();
+        out << " | stopped: " << bot->IsStopped();
+        out << " | CanMove: " << CanMove();
+        out << " | ai delay: " << GetAIInternalUpdateDelay();
+        return out.str();
+    }
+#endif
     else if (command == "strategy")
     {
         return currentEngine->ListStrategies();
@@ -8455,6 +8507,24 @@ uint32 PlayerbotAI::GetBuffedCount(Player* player, std::string spellname)
     }
     return bcount;
 }
+
+#ifdef VMANGOS
+void PlayerbotAI::MarkTargetUnreachable(ObjectGuid guid)
+{
+    // ~20s cooldown: long enough to path away / let the mob leash and reset,
+    // short enough that a genuinely-reachable mob is retried soon.
+    if (guid)
+        m_unreachableTargets[guid] = WorldTimer::getMSTime() + 20000;
+}
+
+bool PlayerbotAI::IsTargetTemporarilyUnreachable(ObjectGuid guid) const
+{
+    auto it = m_unreachableTargets.find(guid);
+    if (it == m_unreachableTargets.end())
+        return false;
+    return WorldTimer::getMSTime() < it->second;
+}
+#endif
 
 bool PlayerbotAI::CanMove()
 {
